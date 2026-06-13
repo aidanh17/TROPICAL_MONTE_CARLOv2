@@ -1,0 +1,82 @@
+  (* --- Step 2: Flattening using effective exponents --- *)
+  (* Check convergence: Re(a_i^eff) > 0 for all i at eps = 0 *)
+  isDivergent = False;
+  divVar = 0;
+
+  Module[{a0vals},
+    a0vals = effectiveAVals /. (If[eps =!= None, eps -> 0, {}]);
+    Do[
+      If[TrueQ[Re[a0vals[[i]]] <= 0] ||
+         (NumericQ[a0vals[[i]]] && Re[a0vals[[i]]] <= 0),
+        isDivergent = True;
+        divVar = i;
+      ],
+      {i, n}
+    ];
+  ];
+
+  If[isDivergent,
+    (* Divergent: return pre-flattened data for Module 2 *)
+    sectorData = <|
+      "ConeIndex"           -> coneIndex,
+      "RayMatrix"           -> mMatrix,
+      "DetM"                -> detM,
+      "SelectedRays"        -> selectedRays,
+      "RawExponents"        -> rawAVals,
+      "NewExponents"        -> effectiveAVals,
+      "MinExponents"        -> minExponents,
+      "TransformedPolys"    -> transformedPolys,
+      "ClearedPolys"        -> clearedPolys,
+      "Prefactor"           -> Abs[detM],
+      "IsDivergent"         -> True,
+      "DivergentVariable"   -> divVar,
+      "Dimension"           -> n,
+      "PolynomialExponents" -> polyExps,
+      "MonomialExponents"   -> monoExps
+    |>;
+    If[verbose,
+      Print["  -> Divergent in variable y_", divVar]
+    ];
+    Return[sectorData]
+  ];
+
+  (* Convergent: flatten y_i -> (y_i')^{1/a_i^eff} *)
+  (* Each monomial {coeff, {e1,...,en}} of Q_j becomes
+     {coeff, {e1/a1^eff,...,en/an^eff}} *)
+  flattenedPolys = Table[
+    Table[
+      {mono[[1]],
+       MapThread[#1/#2 &, {mono[[2]], effectiveAVals}]},
+      {mono, clearedPolys[[j]]}
+    ],
+    {j, Length[clearedPolys]}
+  ];
+
+  (* Prefactor = |det(M)| / Prod(a_i^eff) *)
+  prefactor = Abs[detM] / (Times @@ effectiveAVals);
+
+  sectorData = <|
+    "ConeIndex"            -> coneIndex,
+    "RayMatrix"            -> mMatrix,
+    "DetM"                 -> detM,
+    "SelectedRays"         -> selectedRays,
+    "RawExponents"         -> rawAVals,
+    "NewExponents"         -> effectiveAVals,
+    "MinExponents"         -> minExponents,
+    "TransformedPolys"     -> transformedPolys,
+    "ClearedPolys"         -> clearedPolys,
+    "FlattenedPolys"       -> flattenedPolys,
+    "Prefactor"            -> prefactor,
+    "IsDivergent"          -> False,
+    "DivergentVariable"    -> 0,
+    "Dimension"            -> n,
+    "PolynomialExponents"  -> polyExps,
+    "MonomialExponents"    -> monoExps
+  |>;
+
+  If[verbose,
+    Print["  -> Convergent, prefactor = ", prefactor]
+  ];
+
+  sectorData
+];

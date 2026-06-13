@@ -1,0 +1,538 @@
+tropical_eval.wl + cuba_common.wl loaded
+
+--- Test 1 (A=2) ---
+  CUBA Cuhre:   0.3610128564662 + 0.*I  +/- 2.117*^-7 + 6.41*^-17*I  (1495 evals, fail=0)
+  Sector sum:   0.3610108194006753   |rel dev| = 5.642639834622569*^-6  (gate 0.01)
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp
+  5 convergent sectors
+  Total: 5 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:38:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:56:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:74:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:92:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_4(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:135:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+6 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc
+  Tropical MC:  0.3607264331051502  +/- (0.0002509124360665523, 0)  [1000000 samples]
+                |dev| from Cuhre = 0.0002864233610498368  = 1.14152716198517 sigma
+  PASS
+
+--- Test 1 (A=3) ---
+  CUBA Cuhre:   0.2030848142299 + 0.*I  +/- 1.001*^-7 + 7.022*^-17*I  (1235 evals, fail=0)
+  Sector sum:   0.20308396820714944   |rel dev| = 4.165859243382442*^-6  (gate 0.01)
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp
+  5 convergent sectors
+  Total: 5 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:38:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:56:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:74:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:92:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_4(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:135:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+6 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc
+  Tropical MC:  0.20287296673986968  +/- (0.00023385031525044816, 0)  [1000000 samples]
+                |dev| from Cuhre = 0.00021184749003030912  = 0.905910645463212 sigma
+  PASS
+
+--- Test 2 (A=2+0.5I) ---
+  CUBA Cuhre:   0.3112708424213 - 0.1226169623645*I  +/- 1.578*^-7 + 9.258*^-8*I  (2795 evals, fail=0)
+  Sector sum:   0.3112722115271244 - 0.12261702711022615*I   |rel dev| = 4.096940010009975*^-6  (gate 0.01)
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp
+  5 convergent sectors
+  Total: 5 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:38:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:56:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:74:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:92:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_4(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:135:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+6 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc
+  Tropical MC:  0.31099735202430806 - 0.12256250755325297*I  +/- (0.0002534086424252055, 0.00003676564105203701)  [1000000 samples]
+                |dev| from Cuhre = 0.00027885896742753423  = 1.089029884759109 sigma
+  PASS
+
+--- Test 5 (lam=0.1) ---
+  CUBA Cuhre:   1.296247855468 - 0.5055060706532*I  +/- 5.648*^-7 + 4.512*^-7*I  (4875 evals, fail=0)
+  Sector sum:   1.2962446322615817 - 0.5054997613107998*I   |rel dev| = 5.092237033213341*^-6  (gate 0.01)
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp
+  4 convergent sectors
+  Total: 4 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:54:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:71:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:112:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+5 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc
+  Tropical MC:  1.295641710635918 - 0.5043167504881194*I  +/- (0.0020892602389198903, 0.0008144740179308694)  [1000000 samples]
+                |dev| from Cuhre = 0.0013348760288981669  = 0.5952878932139332 sigma
+  PASS
+
+--- Test 5 (lam=2.5) ---
+  CUBA Cuhre:   0.34584033845 - 0.1518929053174*I  +/- 1.679*^-7 + 1.394*^-7*I  (4615 evals, fail=0)
+  Sector sum:   0.3458365427414963 - 0.15189570683125503*I   |rel dev| = 0.00001248951109266605  (gate 0.01)
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp
+  4 convergent sectors
+  Total: 4 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:54:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:71:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:112:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+5 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc
+  Tropical MC:  0.3456546381251202 - 0.15188302799688141*I  +/- (0.0002441992532046084, 0.000033777817990698544)  [1000000 samples]
+                |dev| from Cuhre = 0.00018596282456741228  = 0.7543388069600305 sigma
+  PASS
+
+--- Test 5 (lam=5.) ---
+  CUBA Cuhre:   0.2532574446914 - 0.1137946969394*I  +/- 1.386*^-7 + 1.021*^-7*I  (3185 evals, fail=0)
+  Sector sum:   0.25326690245496464 - 0.1137868565902179*I   |rel dev| = 0.00004424650194171072  (gate 0.01)
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp
+  4 convergent sectors
+  Total: 4 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:54:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:71:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:112:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+5 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc
+  Tropical MC:  0.25315341831545574 - 0.11378205979948927*I  +/- (0.00023850085745047555, 0.00003757421333502345)  [1000000 samples]
+                |dev| from Cuhre = 0.00010479114560505046  = 0.43402112664176 sigma
+  PASS
+
+--- Test 5 (lam=7.5) ---
+  CUBA Cuhre:   0.2102998176339 - 0.09566172900814*I  +/- 1.442*^-7 + 8.601*^-8*I  (3185 evals, fail=0)
+  Sector sum:   0.2102971032961644 - 0.09566210793740945*I   |rel dev| = 0.000011862530313934541  (gate 0.01)
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp
+  4 convergent sectors
+  Total: 4 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:54:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:71:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:112:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+5 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc
+  Tropical MC:  0.21023777220894244 - 0.09565432528509757*I  +/- (0.00023079804132490923, 0.00004025484482874041)  [1000000 samples]
+                |dev| from Cuhre = 0.00006248559732492189  = 0.2667107233342051 sigma
+  PASS
+
+--- Test 5 (lam=10.) ---
+  CUBA Cuhre:   0.1840485995761 - 0.08441035834106*I  +/- 1.569*^-7 + 8.206*^-8*I  (3575 evals, fail=0)
+  Sector sum:   0.18404920913560857 - 0.08440915360281087*I   |rel dev| = 6.668092392673724*^-6  (gate 0.01)
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp
+  4 convergent sectors
+  Total: 4 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:54:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:71:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:112:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+5 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc
+  Tropical MC:  0.1840106903718309 - 0.08440859646418934*I  +/- (0.00022362315997875634, 0.000041713578443689756)  [1000000 samples]
+                |dev| from Cuhre = 0.00003795012488021678  = 0.16682809585168792 sigma
+  PASS
+
+--- Test 6A (10^6 coeff) ---
+  CUBA Cuhre:   0.0007850074707154 + 0.*I  +/- 7.697*^-10 + 2.599*^-17*I  (9425 evals, fail=0)
+  Sector sum:   0.0007849539982702149   |rel dev| = 0.0000681171163077252  (gate 0.01)
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp
+  4 convergent sectors
+  Total: 4 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:54:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:71:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:112:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+5 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc
+  Tropical MC:  0.0007896953177476953  +/- (0.00001680377825559646, 0)  [1000000 samples]
+                |dev| from Cuhre = 4.687847032295287*^-6  = 0.2789757732451635 sigma
+  PASS
+
+--- Test 6A / 23B: lifted MC (k=2) vs Cuhre ---
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp
+  6 convergent sectors
+  Total: 6 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:58:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:79:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:96:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_4(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:117:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_5(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:164:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+7 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc
+  Lifted MC:    0.0007815770115386767  +/- 3.966099206302712*^-6   dev from Cuhre = -3.4304591767233498*^-6  = 0.8649453778846098 sigma
+  PASS
+
+--- Test 6B (coeffs 10^-4..10^4) ---
+  CUBA Cuhre:   144.0578498879 + 0.*I  +/- 0.0001292 + 1.669*^-17*I  (22945 evals, fail=0)
+  Sector sum:   144.04704179722273   |rel dev| = 0.00007502604464583603  (gate 0.01)
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp
+  5 convergent sectors
+  Total: 5 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:38:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:56:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:74:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:92:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_4(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:135:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+6 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc
+  Tropical MC:  175.67774322155347  +/- (60.004834589252035, 0)  [1000000 samples]
+                |dev| from Cuhre = 31.619893333653465  = 0.5269557619831714 sigma   [report only: heavy-tailed, no gate]
+  PASS
+
+--- Test 6C (10^8 coeff, B=-3) ---
+  CUBA Cuhre:   0.001684581380557 + 0.*I  +/- 1.58*^-9 + 1.778*^-17*I  (20215 evals, fail=0)
+  Sector sum:   0.00168677137414064   |rel dev| = 0.0013000224322293216  (gate 0.05)
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp
+  3 convergent sectors
+  Total: 3 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:36:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:52:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:91:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+4 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc
+  Tropical MC:  0.001686647516270357  +/- (0.000039666885883707966, 0)  [1000000 samples]
+                |dev| from Cuhre = 2.0661357133570056*^-6  = 0.05208716709989103 sigma
+  PASS
+
+--- Test 7A (3D) ---
+  CUBA Cuhre:   0.2648292596866 + 0.*I  +/- 2.606*^-7 + 2.483*^-17*I  (20193 evals, fail=0)
+  Sector sum:   0.2648333702850404   |rel dev| = 0.000015521692902341873  (gate 0.01)
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp
+  8 convergent sectors
+  Total: 8 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:38:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:56:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:74:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:92:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_4(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:110:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_5(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:128:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_6(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:146:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_7(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:192:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+9 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc
+  Tropical MC:  0.26458247194230217  +/- (0.0001739512967938214, 0)  [1000000 samples]
+                |dev| from Cuhre = 0.00024678774429781614  = 1.418717473491016 sigma
+  PASS
+
+--- Test 7B (4D) ---
+  CUBA Cuhre:   0.06092340893509 + 0.*I  +/- 6.017*^-7 + 1.372*^-17*I  (80019 evals, fail=0)
+  Sector sum:   0.06094511956155343   |rel dev| = 0.00035635935091160446  (gate 0.02)
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp
+  14 convergent sectors
+  Total: 14 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:40:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:60:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:80:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:100:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_4(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:120:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_5(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:140:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_6(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:160:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_7(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:180:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_8(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:200:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_9(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:220:60: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_10(const double* y, const double* params) {
+                                                           ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:240:60: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_11(const double* y, const double* params) {
+                                                           ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:260:60: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_12(const double* y, const double* params) {
+                                                           ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:280:60: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_13(const double* y, const double* params) {
+                                                           ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc_generated.cpp:334:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+15 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/INTERFILES/tropical_mc
+  Tropical MC:  0.060706093515397484  +/- (0.00011486521410370122, 0)  [500000 samples]
+                |dev| from Cuhre = 0.00021731541969251256  = 1.8919167250784776 sigma
+  PASS
+
+--- Test 23A (1 + x1 + 10^-6 x2)^-3, exact 500000 ---
+  CUBA Cuhre:        500000.0107503 + 0.*I  +/- 0.4756 + 2.22*^-17*I  (12935 evals, fail=0)
+  Exact:             500000.   Cuhre |rel dev| = 2.1500600036233664*^-8
+  Lifted sector sum: 499960.3886856028   |rel dev| from exact = 0.00007922262879437767  (gate 0.01)
+  PASS
+
+--- Test 23D (1 + 10^6 x)^-2 (1D), exact 10^-6 ---
+  Lifted sector sum: 1.0000000000186586*^-6   |rel dev| from exact = 1.865865352035454*^-11  (gate 0.005)
+  CUBA Cuhre (1D padded): 9.999999999037*^-7 + 0.*I  +/- 8.172*^-13 + 3.556*^-17*I  (5005 evals, fail=0)
+    |rel dev| from exact = 9.630002280628866*^-11  (gate 0.05)
+  PASS
+
+================================================================
+  CUBA cross-check summary (16 cases)
+================================================================
+  Test 1 (A=2)                      PASS   sector dev 5.64e-6   MC 1.14 sigma
+  Test 1 (A=3)                      PASS   sector dev 4.17e-6   MC 0.906 sigma
+  Test 2 (A=2+0.5I)                 PASS   sector dev 4.1e-6   MC 1.09 sigma
+  Test 5 (lam=0.1)                  PASS   sector dev 5.09e-6   MC 0.595 sigma
+  Test 5 (lam=2.5)                  PASS   sector dev 0.0000125   MC 0.754 sigma
+  Test 5 (lam=5.)                   PASS   sector dev 0.0000442   MC 0.434 sigma
+  Test 5 (lam=7.5)                  PASS   sector dev 0.0000119   MC 0.267 sigma
+  Test 5 (lam=10.)                  PASS   sector dev 6.67e-6   MC 0.167 sigma
+  Test 6A (10^6 coeff)              PASS   sector dev 0.0000681   MC 0.279 sigma
+  Test 6A/23B lifted MC             PASS   MC 0.865 sigma
+  Test 6B (coeffs 10^-4..10^4)      PASS   sector dev 0.000075   MC 0.527 sigma
+  Test 6C (10^8 coeff, B=-3)        PASS   sector dev 0.0013   MC 0.0521 sigma
+  Test 7A (3D)                      PASS   sector dev 0.0000155   MC 1.42 sigma
+  Test 7B (4D)                      PASS   sector dev 0.000356   MC 1.89 sigma
+  Test 23A (lifted, exact 5e5)      PASS   sector dev 0.0000792
+  Test 23D (lifted 1D, exact 1e-6)  PASS   sector dev 1.87e-11
+----------------------------------------------------------------
+  16 PASSED, 0 FAILED
+================================================================

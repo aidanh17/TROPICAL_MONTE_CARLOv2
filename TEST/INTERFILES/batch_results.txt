@@ -1,0 +1,22 @@
+######## BATCH = 7200 coefficient sets, n=4, 5 sectors. Single-threaded. ########
+===== per-sector budget M = 2000 =====
+BATCH test: Nkp=7200 coefficient sets, dim=4, 5 sectors, 2000 samples(or maxeval)/sector
+Spec P=c0+sum c_i x_i, B=-6; exact=1/(120 c0^2 prod c_i). Single-threaded.
+------------------------------------------------------------------------------------------------
+1.MC_perkp          wall=   4.552 s   thru=     1582 kp/s   relerr med=3.04e-02 mean=3.84e-02 max=3.33e-01
+2.QMC_shared        wall=   3.291 s   thru=     2188 kp/s   relerr med=1.93e-02 mean=2.85e-02 max=2.49e-01
+3.QMC_shared_basis  wall=   1.088 s   thru=     6617 kp/s   relerr med=1.93e-02 mean=2.85e-02 max=2.49e-01
+4.Vegas_perkp       wall=   6.230 s   thru=     1156 kp/s   relerr med=2.20e-02 mean=2.35e-02 max=7.32e-02
+5.Vegas_ncomp       wall=   4.777 s   thru=     1507 kp/s   relerr med=2.23e-02 mean=2.40e-02 max=8.55e-02
+6.Cuhre_ncomp       wall=   4.183 s   thru=     1721 kp/s   relerr med=1.65e-03 mean=1.90e-03 max=1.10e-02
+
+===== per-sector budget M = 8000 =====
+BATCH test: Nkp=7200 coefficient sets, dim=4, 5 sectors, 8000 samples(or maxeval)/sector
+Spec P=c0+sum c_i x_i, B=-6; exact=1/(120 c0^2 prod c_i). Single-threaded.
+------------------------------------------------------------------------------------------------
+1.MC_perkp          wall=  18.062 s   thru=      399 kp/s   relerr med=1.54e-02 mean=1.93e-02 max=2.57e-01
+2.QMC_shared        wall=  13.183 s   thru=      546 kp/s   relerr med=9.44e-03 mean=1.11e-02 max=6.67e-02
+3.QMC_shared_basis  wall=   4.354 s   thru=     1654 kp/s   relerr med=9.44e-03 mean=1.11e-02 max=6.67e-02
+4.Vegas_perkp       wall=  24.232 s   thru=      297 kp/s   relerr med=3.87e-04 mean=4.17e-04 max=1.96e-03
+5.Vegas_ncomp       wall=  19.363 s   thru=      372 kp/s   relerr med=4.52e-04 mean=7.88e-04 max=8.72e-03
+6.Cuhre_ncomp       wall=  15.058 s   thru=      478 kp/s   relerr med=5.90e-04 mean=7.27e-04 max=5.73e-03

@@ -1,0 +1,1117 @@
+================================================================================
+  TROPICAL MONTE CARLO EVALUATION PIPELINE
+  Summary of tropical_eval.wl
+================================================================================
+
+
+1.  THE PROBLEM
+================================================================================
+
+We want to numerically evaluate generalized Euler integrals of the form
+
+    I = Integral_{[0,inf)^n} dx_1 ... dx_n  prod_i x_i^{A_i}  prod_j P_j(x)^{B_j}
+
+where P_j are polynomials in x_1,...,x_n with real (possibly kinematic-dependent)
+coefficients, A_i are monomial exponents, and B_j are polynomial exponents
+(typically negative, e.g. B_j = -2).  The exponents may depend on a regulator
+eps for dimensional regularization.
+
+The challenge is that the integrand can be singular near coordinate
+hyperplanes, can have wildly varying magnitude, and must be evaluated at
+many kinematic points.  Direct adaptive quadrature scales poorly in
+dimension and kinematic count.
+
+
+2.  THE STRATEGY: TROPICAL DECOMPOSITION + FLATTENING + MONTE CARLO
+================================================================================
+
+The pipeline has four conceptual stages:
+
+    (a) Tropical fan  -->  (b) Sector processing  -->  (c) C++ generation  -->  (d) MC execution
+
+Each stage is described below.
+
+
+2a.  TROPICAL FAN DECOMPOSITION  (tropical_fan.wl)
+--------------------------------------------------------------------------------
+
+Input:  The Newton polytope of the product P_1 * P_2 * ... * P_m
+Output: A simplicial fan partitioning the positive orthant in R^n
+
+The key idea from tropical geometry: the integrand's behavior as x -> 0 along
+different directions is controlled by which monomial of the polynomial dominates.
+The tropical (or normal) fan of the Newton polytope partitions R^n into
+simplicial cones, one for each "region of dominance."
+
+Computing the fan:  The fan is determined by the Newton polytope of the product
+of all polynomials in the integrand.  Crucially:
+
+  - The fan depends only on which monomials are present (the support), not on
+    their coefficients or on the exponents B_j.
+  - The normal fan of a Minkowski sum a*Newt(P1) + b*Newt(P2) is the common
+    refinement of the individual normal fans, and this refinement is the same
+    for ANY positive a, b.
+  - Therefore, to compute the fan, simply pass the product P_1 * P_2 * ... * P_m
+    (each to the first power) to PolytopeVertices.  No powers are needed.
+  - For integrands with kinematic-dependent coefficients (e.g. P = 1 + lam*x1^2),
+    use a unit-coefficient proxy (e.g. 1 + x1^2) since the fan is independent
+    of coefficient values.
+
+In code:
+    fanPoly = P1 * P2 * ... * Pm;
+    verts   = PolytopeVertices[fanPoly^(-1), vars];
+    fanData = ComputeDecomposition[verts];
+
+The package tropical_fan.wl computes this via Polymake.  It returns:
+  - dualVertices:  a list of ray vectors (rows), each a direction in R^n
+  - simplexList:   a list of simplices, each a list of indices into dualVertices
+
+Each simplex defines one sector (simplicial cone) of the decomposition.  Since
+the fan covers all of R^n, the sum over sectors reconstructs the original integral.
+
+
+2b.  SECTOR PROCESSING  (Module 1: ProcessSector)
+--------------------------------------------------------------------------------
+
+For each sector (simplicial cone with rays rho_1,...,rho_n), we perform:
+
+Step 1: Monomial change of variables.
+
+    x_i = prod_j  y_j^{M_{ij}}     where  M = -Transpose[{rho_1,...,rho_n}]
+
+    This maps [0,inf)^n -> [0,1)^n (after further flattening) and aligns the
+    cone with coordinate axes.  The Jacobian contributes:
+
+        dx_1...dx_n = |det(M)| * prod_j y_j^{sum_i M_{ij} - 1} dy_1...dy_n
+
+    Combined with the original monomial prefactor x_i^{A_i}, the new monomial
+    prefactor is:
+
+        prod_j y_j^{rawA_j - 1}    where  rawA = (A + 1) . M
+
+Step 2: Tropical factoring.
+
+    After substitution, each polynomial P_k becomes a sum of monomials in y with
+    SIGNED exponents.  The tropically dominant monomial (the one the fan says
+    dominates in this cone) has the minimum exponents:
+
+        d_{k,i} = min_m (exponent of y_i in monomial m of P_k)
+
+    We factor it out:
+
+        P_k(y) = prod_i y_i^{d_{k,i}}  *  Q_k(y)
+
+    The "cleared" polynomial Q_k has all non-negative y-exponents and includes
+    a constant term (the dominant monomial itself).  The factored-out y-powers
+    merge into the monomial prefactor, giving effective exponents:
+
+        a_i^eff = rawA_i + sum_k B_k * d_{k,i}
+
+    IMPORTANT: The tropical factoring uses only exponent vectors, not
+    coefficients.  This is correct because the fan structure is determined by
+    tropicalization (which ignores coefficients).  With large coefficients, the
+    tropically dominant monomial may not be the numerically largest one, but
+    the factoring is an exact algebraic identity -- correctness is unaffected,
+    only MC variance changes.
+
+    For a properly constructed tropical fan and convergent integral,
+    Re(a_i^eff) > 0 for all i, guaranteeing integrability.
+
+Step 3: Flattening substitution.
+
+    y_i = (y'_i)^{1/a_i^eff}
+
+    This absorbs the monomial prefactor entirely:
+
+        y_i^{a_i^eff - 1} dy_i  =  (1/a_i^eff) dy'_i
+
+    After flattening:
+    - Integration domain is [0,1]^n
+    - NO monomial prefactor remains (it's exactly 1)
+    - The prefactor becomes |det(M)| / prod(a_i^eff)
+    - Each monomial {coeff, {e_1,...,e_n}} of Q_k becomes {coeff, {e_1/a_1,...,e_n/a_n}}
+    - The integrand is bounded on [0,1]^n and O(1) -- ideal for uniform MC
+
+The sector integral becomes:
+
+    I_sector = prefactor * Integral_{[0,1]^n} dy'  prod_j Q_j(y')^{B_j}
+
+
+2c.  DIVERGENCE REGULATION  [removed in v2]
+--------------------------------------------------------------------------------
+
+Modules 2 (tropical subtraction: IdentifyDivergences, ProcessDivergentSector,
+ValidateSubtraction) and 2b (IBP: IBPReduceSector, IBPProcessSector,
+IBPCheckBoundary, ValidateIBP, GenerateCppMonteCarloIBP, EvaluateTropicalMCIBP)
+have been removed in TROPICAL_MONTE_CARLOv2.
+
+TROPICAL_MONTE_CARLOv2 supports convergent integrals only (RegulatorSymbol must
+be None or absent).  For eps-regulated or divergent integrals, use the original
+TROPICAL_MONTE_CARLO package.
+
+The CC/ comparison scripts that reference these removed functions are historical
+artifacts from the original package and are no longer runnable against v2.
+
+
+2d.  C++ CODE GENERATION  (Module 3: GenerateCppMonteCarlo)
+--------------------------------------------------------------------------------
+
+The Mathematica-side symbolic processing produces, for each sector, a list of
+{coefficient, exponentVector} pairs for the flattened polynomial.  Module 3
+converts this into a self-contained C++ source file.
+
+Expression conversion (MmaToC):
+    A recursive pattern-matching converter translates Mathematica expressions
+    to C++ strings:
+        Integer n  -->  "n.0"
+        Rational p/q  -->  "(p.0/q.0)"
+        Complex[a,b]  -->  "cx(a, b)"        (cx = std::complex<double>)
+        Power[x, n]  -->  "std::pow(x, n)"
+        Log[x]  -->  "std::log(x)"
+        Symbol lam  -->  "params[i]"          (kinematic parameter lookup)
+
+    Kinematic symbols are mapped to a params[] array so the same compiled
+    binary evaluates at any kinematic point.
+
+Polynomial evaluation (log-exp pattern):
+    Each flattened polynomial Q_j(y') is evaluated as:
+
+        double log_y[dim];
+        for (i = 0; i < dim; i++) log_y[i] = std::log(y[i]);
+
+        cx P0(0.0, 0.0);
+        P0 += coeff_0 * std::exp(alpha_0_0 * log_y[0] + alpha_0_1 * log_y[1]);
+        P0 += coeff_1 * std::exp(alpha_1_0 * log_y[0]);
+        ...
+
+    This avoids pow(y, fractional) and handles y near 0 gracefully.
+
+One type of integrand function is generated (v2, convergent only):
+
+    integrand_conv_N   -- convergent sector:  prefactor * prod Q_j^{B_j}
+
+All functions have the same signature: cx f(const double* y, const double* params).
+They are collected in a function pointer table.
+
+The generated main() function:
+    1. Reads kinematic points from an input file (N_PARAMS doubles per line)
+    2. Loops over kinematic points (OpenMP parallelized when available)
+    3. For each kinematic point, loops over all integrand functions
+    4. For each function, draws n_samples uniform points on [0,1]^dim
+    5. Accumulates mean and variance using Welford's online algorithm
+    6. Sums sector contributions (means add, variances add by independence)
+    7. Writes one line per kinematic point: re  im  err_re  err_im
+    8. Optional debug mode (-DTROPICAL_MC_DEBUG) adds NaN detection and
+       magnitude monitoring
+
+Compilation:
+    CompileCpp invokes g++ with C++17.  If OpenMP is unavailable (e.g. macOS
+    clang), it automatically retries without -fopenmp.  The generated C++
+    wraps all OpenMP calls in #ifdef _OPENMP guards.  An optional 4th argument
+    (cubaPrefix) adds -I/-L/-lcuba for the VEGAS path; omitted/None leaves the
+    MC compile line byte-identical to before.
+
+
+2e.  NUMERICAL INTEGRATOR: MC vs VEGAS  ("Integrator" option)
+--------------------------------------------------------------------------------
+
+The decomposition produces the VALUE; the sampler is a second-order optimization
+on top.  GenerateCppMonteCarlo / EvaluateTropicalMC / EvaluateTropicalMCLifted
+take "Integrator" -> "MC" (default) | "VEGAS":
+
+    "MC"     plain uniform Monte Carlo (the historical default; unchanged).
+    "VEGAS"  CUBA-Vegas adaptive importance sampling.  Returns the SAME value,
+             typically 1-3 orders more accurate at a smaller eval budget.
+
+The TEST/ sampler study (REPORT.md / RESULTS.md) found Vegas best on the
+post-flattening integrand for n=2..8: it absorbs the sqrt(.) cube-edge structure
+that flattening leaves behind, keeps a QMC-like rate (~N^-1..-1.7 vs MC's
+N^-0.5) that is stable in dimension, and is the only method that scales to
+n=7,8.  Implementation notes:
+    - ncomp=2 (Re/Im): complex integrands are first-class.
+    - n_samples is reused as Vegas maxeval per sector; output contract
+      (re im reErr imErr, summed in quadrature over sectors) is unchanged.
+    - VEGAS tuning options: "VegasEpsRel" (Automatic => 10^-PrecisionGoal,
+      clamped [1e-12,1e-2]), "VegasSeed" (0 => Sobol), "VegasNStart",
+      "VegasNIncrease", "VegasNBatch", "VegasMinEval".
+    - Requires CUBA (cuba.h + libcuba; brew install cuba).  Absent => the driver
+      fires TropicalEval::nocuba and returns $Failed (no silent MC fallback).
+    - With "MC" the generated source, flags, and results are byte-identical to
+      the pre-VEGAS pipeline (regression-gated).
+LIFTED sectors (auxiliary-variable method, §8): VEGAS works WITH the lift (the
+domain indicator is integrator-agnostic).  The lift's hard domain cutoff is a
+discontinuity, so Vegas keeps a small residual bias that SHRINKS with budget,
+and BOTH samplers' error bars are optimistic in this heavy-tail regime.  Which
+wins depends on the coefficient (lifted (1+c x1^2+x2^2+x1 x2^2)^-2, k=2, 2e6
+evals each; test_vegas.wl cases L1-L3):
+    c = 1e-4 (small):  MC ~1.2%   VEGAS ~0.35%   -> VEGAS
+    c = 1e-6 (small):  MC ~13% (error bar lies)  VEGAS ~3% -> VEGAS (decisively)
+    c = 1e6  (large):  MC ~0.3%   VEGAS ~1%      -> MC
+For SMALL coefficients (the main reason to lift) lifting + VEGAS BEATS lifting +
+MC; for a LARGE coefficient MC edges it.  Cross-check against a reference rather
+than trusting the quoted error bar.  On the standard CONTINUOUS sectors VEGAS is
+unconditionally 1-3 orders tighter.  Demonstrated case-by-case in
+EXAMPLES/test_vegas.wl (V1-V4 continuous, L1-L3 lifted; requires CUBA).
+
+
+3.  DRIVER AND VALIDATION  (Modules 4 and 5)
+================================================================================
+
+
+3a.  EvaluateTropicalMC  (Module 4)
+--------------------------------------------------------------------------------
+
+The top-level driver that orchestrates the full pipeline:
+
+    Step 1:   Validate inputs (dimensions, finiteness); error if RegulatorSymbol present
+    Step 2:   ProcessSector for ALL simplicial cones
+    Step 3:   If RunChecks: ValidateDecomposition on first few kinematic points
+    Step 4:   Error if any divergent sectors detected (convergent-only in v2)
+    Step 5:   [removed in v2]
+    Step 6:   Generate C++ code (convergent sectors only)
+    Step 7:   If RunChecks: debug compile and run on subset
+    Step 8:   Write kinematic data file
+    Step 9:   Release compile
+    Step 10:  Run binary, read results
+    Step 11:  Assemble final results
+    Step 12:  Error summary and optional NIntegrate cross-check
+
+
+3b.  Validation  (Module 5: RunAllTests)
+--------------------------------------------------------------------------------
+
+6 tests verify end-to-end correctness (convergent integrals only in v2):
+
+    Test 1:  Convergent 2D, real exponents (A = 2, 3)
+        P = 1 + 2x1^2 + x2^2 + x1*x2^2 + 3*x1^2*x2
+        Compares sector sum vs. direct NIntegrate.
+    Test 2:  Convergent 2D, complex exponents (A = 2 + 0.5i)
+        Same polynomial, complex power.  Tests log-exp evaluation with
+        complex-valued integrand.
+    Test 3v2: Negative tests (regulator guard and divergent-input guard)
+        Part A: eps-regulated spec -> must return $Failed with noregulator message.
+        Part B: convergent-spec but divergent sectors -> must return $Failed
+                with divergentinput message.
+    Test 5:  End-to-end kinematic scan (100 lambda values)
+        P = 1 + lam*x1^2 + x2^2 + x1*x2^2, complex exponent
+        Verifies sector decomposition at 5 representative points.
+    Test 6:  Large polynomial coefficients
+        Three cases with coefficients spanning up to 8 orders of magnitude
+        (10^{-4} to 10^8).  Verifies that the tropical algorithm is correct
+        despite the tropically dominant monomial not being the numerically
+        largest one.
+    Test 7:  Higher-dimensional integrals (3D and 4D)
+        Case A (3D): P = 1 + x1^2 + x2^2 + x3^2 + x1*x2*x3, exponent -3
+            6 rays, 8 sectors.
+        Case B (4D): P = 1+x1^2+x2^2+x3^2+x4^2+x1*x2+x3*x4, exponent -4
+            8 rays, 14 sectors.
+        Verifies ProcessSector, tropical factoring, and
+        ValidateDecomposition in dimensions > 2.
+
+Tests 8-22 (divergent-integral and IBP tests) have been removed in v2.
+Use the original TROPICAL_MONTE_CARLO package for those.
+
+CUBA cross-check of the suite (EXAMPLES/test_cuba.wl):
+    Every convergent integral of the suite — Test 1 (A=2,3), Test 2,
+    Test 5 (5 representative lam values), Test 6 (Cases A/B/C, plus the
+    lifted MC re-check of Case A = Test 23B), Test 7 (3D and 4D), and the
+    lifted-test integrals 23A and 23D — is integrated independently with
+    CUBA Cuhre applied DIRECTLY to the original integrand (x = t/(1-t)
+    compactification, no tropical decomposition) and compared against the
+    tropical sector sum, the tropical C++ MC, and exact values where
+    available.  Gates: sector sum within 1% of Cuhre (5% for the PG2
+    cases 6C and 2% for 4D), MC within 5 sigma; Test 6B's plain MC is
+    reported without a gate (small constant term 10^-4 -> heavy tail,
+    cf. Example 20).  Test 3v2 contains only negative tests (nothing to
+    integrate).  Requires CUBA (`brew install cuba`); runtime ~5-15 min.
+    Measured at the time of writing: ALL 16 CASES PASS.  Sector sums agree
+    with Cuhre to 4e-6..4e-4 (1.3e-3 for the PG2 case 6C); gated MCs land
+    at 0.05-1.9 sigma.  Notable Cuhre references: Test 6A = 7.850075e-4,
+    Test 6B = 144.0578 +/- 1.3e-4, Test 6C = 1.684581e-3; Cuhre also
+    resolves Test 23A's boundary sliver (500000 to 2e-8) and Test 23D's
+    1e-6-wide peak (1e-6 to 1e-10).  Test 6B's plain MC shows the
+    documented heavy tail: 175.7 +/- 60.0 (0.53 sigma, uninformative).
+
+
+4.  FUNCTION REFERENCE
+================================================================================
+
+
+PUBLIC FUNCTIONS (TropicalEval` context)
+--------------------------------------------------------------------------------
+
+ProcessSector[integrandSpec, dualVertices, simplex, coneIndex]
+    Performs monomial change of variables, tropical factoring, and flattening
+    for one simplicial cone.
+    Returns: Association with keys ConeIndex, RayMatrix, DetM, NewExponents,
+    MinExponents, ClearedPolys, FlattenedPolys, Prefactor, IsDivergent,
+    DivergentVariable, Dimension, PolynomialExponents, etc.
+
+CheckFlatteningMagnitude[sectorData, nSamples]
+    Evaluates the flattened integrand at random points on [0,1]^n and
+    reports min/max/mean magnitude.  Useful for detecting high-variance
+    sectors (e.g. from large polynomial coefficients).
+
+ValidateDecomposition[integrandSpec, fanData, testKinematics, precisionGoal]
+    Computes the original integral via direct NIntegrate on [0,inf)^n, then
+    computes each sector integral via NIntegrate on [0,1]^n, and compares.
+    Returns: Association with DirectResult, SectorSum, RelativeError,
+    SectorResults.
+
+MmaToC[expr, paramMap]
+    Converts a Mathematica expression to a C++ code string using recursive
+    pattern matching.  The paramMap association maps kinematic symbols to
+    "params[i]" strings.
+
+GenerateCppMonteCarlo[convergentSectors, divergentSectors, integrandSpec, outputFile]
+    Generates a complete, self-contained C++ source file with all integrand
+    functions, function pointer table, file I/O, and main() with OpenMP
+    parallelization and Welford variance estimation.
+    Options: "NSamples" (default 10^6), "MaxDim" (default 20), "SeedBase" (42).
+    The generated binary also accepts an OPTIONAL 5th argv (seed_base) that
+    overrides the compile-time SeedBase at run time:
+        tropical_mc <in> <out> [n_samples] [n_threads] [seed_base]
+    The per-kinematic-point RNG seed is seed_base + kp.  This lets a caller
+    re-run the SAME compiled binary under different seeds without recompiling.
+
+CompileCpp[srcFile, outputBinary, debug]
+    Compiles the generated C++ code.  Automatically retries without -fopenmp
+    if the compiler doesn't support it (e.g. macOS clang).
+    debug=True adds -DTROPICAL_MC_DEBUG for NaN detection and diagnostics.
+
+EvaluateTropicalMC[integrandSpec, fanData, kinematicPoints, opts]
+    Top-level driver.  Takes an integrand specification and fan data,
+    processes all sectors, generates C++, compiles, runs, reads results,
+    and returns a list of result associations.
+    Options: NSamples, NThreads, RunChecks, PrecisionGoal, WorkingDirectory,
+             Verbose, SeedBase (default 42).
+    SeedBase is forwarded to GenerateCppMonteCarlo and ALSO passed as the runtime
+    5th argv to the production binary, so distinct SeedBase values give distinct
+    MC streams (verified via the z0-sweep harness; SANDBOX/z0_sweep_common.wl
+    re-runs the compiled binary across >=5 seeds without recompiling).
+    Note: RegulatorSymbol must be None (or absent); errors on divergent sectors.
+
+ParsePolynomial[poly, vars]
+    Parses a symbolic polynomial into a list of {coefficient, exponentVector}
+    pairs.
+
+RunAllTests[]
+    Runs the 6-test validation suite (Tests 1, 2, 3v2, 5, 6, 7) with structured
+    PASS/FAIL reporting.  All divergent-integral tests removed in v2.  Defined
+    in tropical_eval_examples.wl (which does NOT call it); invoke it via
+    `wolframscript -file EXAMPLES/run_validation_suite.wl`.
+
+[IBP functions removed in v2: IBPReduceSector, IBPProcessSector,
+IBPCheckBoundary, ValidateIBP, GenerateCppMonteCarloIBP, EvaluateTropicalMCIBP.
+Use TROPICAL_MONTE_CARLO for divergent/eps-regulated integrals.]
+
+
+DATA STRUCTURES
+--------------------------------------------------------------------------------
+
+IntegrandSpec (Association):
+    "Polynomials"        -> {P1, P2, ...}       symbolic polynomials in x[i]
+    "MonomialExponents"  -> {A1, A2, ...}       one per variable
+    "PolynomialExponents"-> {B1, B2, ...}       one per polynomial
+    "Variables"          -> {x[1], x[2], ...}
+    "KinematicSymbols"   -> {lam, mu, ...}      or {} if none
+    "RegulatorSymbol"    -> eps                  or None
+
+SectorData (Association, returned by ProcessSector):
+    "ConeIndex"          -> integer
+    "RayMatrix"          -> M (n x n matrix)
+    "DetM"               -> det(M)
+    "SelectedRays"       -> {rho_1, ..., rho_n}
+    "RawExponents"       -> rawA (before tropical factoring)
+    "NewExponents"       -> effectiveA (after tropical factoring)
+    "MinExponents"       -> {{d_{1,1},...,d_{1,n}}, ...} per polynomial
+    "TransformedPolys"   -> monomials in y-space (signed exponents)
+    "ClearedPolys"       -> monomials after factoring (non-negative exponents)
+    "FlattenedPolys"     -> monomials after flattening (exps divided by a_eff)
+    "Prefactor"          -> |det(M)| / prod(a_i^eff)
+    "IsDivergent"        -> True/False
+    "DivergentVariable"  -> index k (0 if convergent)
+    "Dimension"          -> n
+    "PolynomialExponents"-> {B1, ...}
+
+[DivergentSectorData and IBPSectorData structures removed in v2.]
+
+
+5.  FILES
+================================================================================
+
+Core packages (TROPICAL_MONTE_CARLOv2/):
+  tropical_fan.wl                    Tropical fan computation via Polymake (~470 lines)
+  tropical_eval.wl                   Main evaluation package (~2400 lines, v2)
+                                     Module 1:  ProcessSector
+                                     Module 1b: auxiliary-variable lifting (§8)
+                                     Module 2:  [removed — divergence regulation]
+                                     Module 3:  C++ code generation
+                                     Module 4:  EvaluateTropicalMC driver
+                                     Module 4b: EvaluateTropicalMCLifted driver
+                                     Module 5:  RunAllTests (6 tests, convergent only)
+
+Examples and tests (TROPICAL_MONTE_CARLOv2/EXAMPLES/):
+  tropical_eval_examples.wl          Examples 1-14 (run inline) + DEFINES the
+                                     6-test validation suite (RunTest1..7 /
+                                     RunAllTests).  NOTE: this file never CALLS
+                                     RunAllTests; invoke the suite via
+                                     run_validation_suite.wl below.
+  run_validation_suite.wl            Runs Examples 1-14 (by loading the file
+                                     above) and then invokes RunAllTests[] (the
+                                     6-test suite: Tests 1, 2, 3v2, 5, 6, 7).
+                                     Exits nonzero if any test FAILs (CI-usable).
+  tropical_eval_examples2.wl         Examples 15-20: complex exponents and
+                                     small/extreme coefficients (incl. lifting)
+  tropical_eval_examples3.wl         Examples 21-23: cross-checks via
+                                     independent methods (exact Gamma closed
+                                     form + CUBA Vegas/Cuhre on the direct
+                                     integrand; CUBA optional dependency)
+  cuba_common.wl                     Shared CUBA cross-check generator
+                                     (generateCubaSource / runCubaCheck),
+                                     used by examples3 and test_cuba.wl
+  tropical_fan_examples.wl           Examples for the fan package
+  test_quick.wl                      Quick test (Example 1 only)
+  test_cpp.wl                        C++ compilation and MC execution test
+  test_seedbase.wl                   Tests the SeedBase RUNTIME-argv override:
+                                     compiles ONCE, then re-runs the SAME binary
+                                     at several seeds, asserting determinism
+                                     (same seed -> identical), argv[5] override
+                                     wiring (no-arg == compile-time 42), distinct
+                                     streams, and each stream within 5 sigma of
+                                     Pi/8.  (See §4 GenerateCppMonteCarlo argv.)
+  test_lifted.wl                     Test 23: lifted-integral pipeline (§8h)
+  test_cuba.wl                       CUBA cross-check of ALL test-suite
+                                     integrals (Tests 1,2,5,6,7 + 23A/23D):
+                                     Cuhre on the direct integrand vs sector
+                                     sum vs tropical MC, PASS/FAIL gates
+  test_vegas.wl                      MC vs VEGAS parity demo (V1-V4 continuous,
+                                     L1-L3 lifted; requires CUBA): runs each spec
+                                     both ways and asserts the same value within
+                                     combined error, VEGAS 1-3 orders tighter
+                                     (see §2e)
+  [test_divergent.wl removed in v2]
+  prompt_tropical_mc.txt             Development prompt / specification
+
+  NOTE (shared working directory): every script that runs the C++ Monte Carlo
+  (test_cpp excepted -- it uses test_mc* names) writes to the SAME INTERFILES/
+  with FIXED filenames (tropical_mc, tropical_mc_generated.cpp, mc_results.txt).
+  Run these scripts ONE AT A TIME; two concurrent MC jobs in the same
+  WorkingDirectory clobber each other's binary/result files and yield bogus
+  numbers.  (The symbolic, NIntegrate-gated RunAllTests suite is unaffected.)
+
+Cross-checks (TROPICAL_MONTE_CARLOv2/CC/):
+  [historical artifacts from original package; scripts referencing removed
+   functions (IdentifyDivergences, ProcessDivergentSector, IBP functions,
+   EvaluateTropicalMCIBP) are no longer runnable against v2]
+
+Generated intermediate files (TROPICAL_MONTE_CARLO/INTERFILES/):
+  (auto-created, gitignored)         Generated C++ source, compiled binaries,
+                                     kinematic data files, MC result files
+
+Cross-checks against FIESTA (TROPICAL_MONTE_CARLO/CC/):
+  SUMMARY.txt                        Cross-check results summary
+  compare_pole_and_finite.wl         GL(1)-converted comparison (tests 1-3)
+  fiesta_bubblepp_standalone.wl      FIESTA on bubblepp presector 1
+  compare_bubblepp_sector.wl         Tropical MC on bubblepp presector 1
+  convergence_study_v2.wl            MC convergence study (50K-10M samples)
+  diagnose_eps_eps.wl                eps/eps cross-term investigation
+  compare_fiesta_tropical.wl         Full FIESTA vs tropical comparison
+  compare_v2.wl                      Comparison script v2
+  run_quick_comparison.wl            Quick comparison runner
+  convergence_study.wl               Convergence study v1
+  paper_v2.tex                       Mizera paper on GL(1) gauge fixing
+  FIESTA5.tex                        FIESTA5 documentation
+
+
+6.  EXAMPLES  (EXAMPLES/tropical_eval_examples.wl: 1-14,
+               EXAMPLES/tropical_eval_examples2.wl: 15-20,
+               EXAMPLES/tropical_eval_examples3.wl: 21-23)
+================================================================================
+
+Example 1:  Basic 2D convergent integral
+    Int dx1 dx2 / (1 + x1^2 + x2^2)^3
+    Step-by-step ProcessSector output for all 3 sectors, showing det(M),
+    rawA, minExponents, effectiveA, prefactor, and cleared polynomial.
+    Validated against NIntegrate.
+
+Example 2:  Complex exponents
+    Int dx1 dx2 / (1 + 2x1^2 + x2^2 + x1*x2^2 + 3x1^2*x2)^{2+I}
+    Complex polynomial power.  Demonstrates CheckFlatteningMagnitude and
+    full ValidateDecomposition with complex-valued integrand.
+
+Example 3:  Kinematic-dependent integral
+    Int dx1 dx2 / (1 + lam*x1^2 + x2^2 + x1*x2^2)^2
+    Coefficient 'lam' varies.  Shows symbolic ProcessSector output and
+    validates at lam = 0.5, 1, 2, 5.
+
+Example 4:  Tropical factoring step by step
+    Walks through the entire tropical factoring procedure for one sector:
+    rays, M matrix, raw exponents, transformed monomials (signed exponents),
+    min exponents, cleared polynomial Q, effective exponents, and flattened
+    polynomial with exponents divided by a_eff.
+
+Example 5:  MmaToC expression converter
+    Demonstrates conversion of Integer, Rational, Real, Complex, Power,
+    Sqrt, Log, Exp, Plus, Times, and kinematic parameter expressions to
+    C++ code strings.
+
+Example 6:  C++ code generation and execution (no kinematics)
+    Int dx1 dx2 / (1 + x1^2 + x2^2)^3 = Pi/8
+    Full pipeline: ProcessSector -> GenerateCppMonteCarlo -> CompileCpp ->
+    run binary -> compare MC result against exact value.
+
+Example 7:  C++ with kinematic scan
+    Int dx1 dx2 / (1 + lam*x1^2 + x2^2 + x1*x2^2)^2
+    Generates C++, compiles once, evaluates at 10 values of lam.
+    Compares MC results against NIntegrate at each point.
+
+Example 8:  ParsePolynomial utility
+    Shows how ParsePolynomial extracts {coefficient, exponentVector} pairs
+    from a symbolic polynomial with kinematic-dependent coefficients.
+
+Example 9:  Multiple polynomials (product of two factors)
+    Int dx1 dx2 x1^{1/2} / [(1+x1+x2)^2 * (1+x1*x2)]
+    Two polynomials with separate exponents plus a monomial prefactor.
+    Fan from product P1*P2, 5 sectors, validated against NIntegrate.
+
+Example 10: Non-trivial numerator — single numerator polynomial
+    Int dx1 dx2 (1+x1)^{3/2} / (1+x1^2+x2^2+x1*x2)^3
+    Positive polynomial exponent (numerator) and negative (denominator).
+    IntegrandSpec lists both with signed exponents: {3/2, -3}.
+    Fan from product P_num * P_den (first power only).
+
+Example 11: Non-trivial numerator — two numerator factors
+    Int dx1 dx2 (1+x1+x2)^{1/2} * (x1+x2)^{1/3} / (1+2x1^2+x2^2+x1*x2^2)^2
+    Three polynomials: two in numerator (B = 1/2, 1/3), one in denominator
+    (B = -2).  Six sectors, all convergent.
+
+Example 12: Numerator with kinematic-dependent coefficients
+    Int dx1 dx2 (1+lam*x1)^{3/2} / (1+x1^2+x2^2)^3
+    Numerator coefficient varies with lam.  Fan uses unit-coefficient proxy
+    (1+x1)*P_den since the fan is independent of coefficient values.
+    Validates at lam = 0.5, 1, 2, 5.
+
+Example 13: 3D convergent integral
+    Int dx1 dx2 dx3 / (1 + x1^2 + x2^2 + x3^2 + x1*x2*x3)^3
+    First example in dimension > 2.  6 rays, 8 sectors.  Validates that
+    ProcessSector, tropical factoring, and ValidateDecomposition all
+    work correctly in 3D.
+
+Example 14: 4D convergent integral
+    Int dx1 dx2 dx3 dx4 / (1+x1^2+x2^2+x3^2+x4^2+x1*x2+x3*x4)^4
+    Tests the pipeline in 4 dimensions.  8 rays, 14 sectors (all convergent).
+    Mix of degree-1 and degree-2 monomials gives a richer Newton polytope.
+
+Examples 15-20 (EXAMPLES/tropical_eval_examples2.wl) focus on polynomials
+raised to complex exponents and/or small coefficients.  All are convergent
+and cross-checked against NIntegrate.
+
+Example 15: Two polynomials, both with complex exponents
+    Int dx1 dx2 (1+x1+x2)^{-(3/2+I/2)} * (1+x1*x2)^{-(1-I/3)}
+    A product of two polynomials carrying two different complex exponents.
+    5 sectors, all with complex effective exponents (Re > 0).
+    Validated: rel err ~ 5e-6.
+
+Example 16: Complex monomial exponents AND complex polynomial exponent
+    Int dx1 dx2 x1^{1/2+I/3} x2^{-1/4-I/5} / (1+x1^2+x2^2+x1*x2)^{2+I}
+    First example with complex A_i.  Convergence requires Re(A_i) > -1 at
+    the origin and the usual polytope condition at infinity; imaginary
+    parts only produce oscillatory factors handled by log-exp evaluation.
+    Validated: rel err ~ 2e-5.
+
+Example 17: Full C++ MC pipeline with complex exponent (driver + scan)
+    Int dx1 dx2 / (1 + lam*x1^2 + x2^2 + x1*x2^2)^{2+I/2}
+    First example to use the top-level EvaluateTropicalMC driver: one
+    compile, 5 values of lam, complex MC estimates with independent
+    Re/Im error bars, cross-checked against NIntegrate at every point
+    (deviations 0.03%-0.2% at 2e5 samples).
+
+Example 18: Small polynomial coefficients — exactness and diagnostics
+    Int dx1 dx2 / (1 + 10^-4 x1^2 + x2^2 + 10^-3 x1*x2^2)^2
+    The fan depends only on the support, so the decomposition is exact for
+    ANY coefficients (validated: rel err ~ 2e-5).  DetectExtremeCoefficients
+    locates the small coefficients; CheckFlatteningMagnitude shows the
+    sector whose cleared polynomial has constant term 10^-4 reaching
+    |f| ~ 500 in a 500-point spot check (heavy tail; max is (10^-4)^-2 = 10^8
+    at the corner) while other sectors stay O(1).
+
+Example 19: Small coefficients AND complex exponent
+    Int dx1 dx2 / (1 + 10^-3 x1^2 + x2^2 + 10^-2 x1*x2^2)^{2+I/2}
+    Both features combined.  Validated: rel err ~ 3e-7.  Comments document
+    the regime (coefficients <~ 10^-4 with complex exponents) where the
+    sharply peaked oscillatory sector integrands defeat adaptive quadrature
+    on the validation side — there the C++ MC pipeline and lifting are the
+    robust tools.
+
+Example 20: Lifting a small coefficient (variance reduction)
+    Int dx1 dx2 / (1 + 10^-4 x1^2 + x2^2 + x1*x2^2)^2
+    Full lifting workflow: DetectExtremeCoefficients -> LiftCoefficients
+    (k=2, z0 = 1/100, exact round-trip identity) -> automatic 3D lifted fan
+    (6 rays, 8 sectors) -> ValidateLiftedDecomposition (rel err ~ 6e-6,
+    0 dropped) -> EvaluateTropicalMCLifted vs plain EvaluateTropicalMC at
+    2e5 samples:
+        NIntegrate reference:  13.0901
+        plain  MC:   7.83 +/- 1.56  (heavy tail undersampled; the sample
+                                     error bar UNDERSTATES the true error)
+        lifted MC:  12.79 +/- 0.34  (consistent, ~4.6x smaller error bar)
+    Demonstrates both the danger (deceptively small plain-MC error bars)
+    and the cure.  At 10^-6 even the lifted integrand needs >> 10^6 samples;
+    lifting requires real polynomial exponents (liftcomplex guard).
+
+Examples 21-23 (EXAMPLES/tropical_eval_examples3.wl) cross-check the
+pipeline against methods that share no code or algorithm with it or with
+NIntegrate: an exact Gamma-function closed form, and the CUBA library
+(https://feynarts.de/cuba/, optional dependency: `brew install cuba`)
+integrating the ORIGINAL integrand directly on [0,inf)^n via the
+compactification x_i = t_i/(1-t_i).  The generator that turns any numeric
+IntegrandSpec into a self-contained 2-component (Re, Im) CUBA program
+lives in EXAMPLES/cuba_common.wl (generateCubaSource / runCubaCheck;
+1D integrands are padded to ndim=2 since Cuhre requires ndim >= 2); it
+auto-detects CUBA under /opt/homebrew, /usr/local, /usr and skips
+gracefully if absent.  EXAMPLES/test_cuba.wl applies the same machinery
+to EVERY convergent integral of the validation suite (see §3b).
+
+Example 21: Exact analytic cross-check (Beta/Gamma), complex exponents
+    Int dx1 dx2 x1^{a1-1} x2^{a2-1} (1+x1+x2)^{-b}
+      = Gamma[a1] Gamma[a2] Gamma[b-a1-a2] / Gamma[b]
+    with a1 = 5/4+I/3, a2 = 3/2-I/5, b = 5+I/2 (exact value
+    0.0281533074798 - 0.0200123204920 I).  Four independent computations
+    agree: exact formula; NIntegrate direct (2e-6) and tropical sector sum
+    (9e-6); tropical C++ MC at 5e5 samples (within ~0.2 sigma of exact);
+    CUBA Cuhre on the direct integrand (3e-8 relative).
+
+Example 22: CUBA cross-check of the small-coefficient integral
+    Int dx1 dx2 / (1 + 10^-4 x1^2 + x2^2 + x1*x2^2)^2  (Example 20's case)
+    Three algorithmically unrelated methods agree on ~13.0901:
+        CUBA Cuhre (deterministic, direct):  13.09008897 +/- 1.3e-5
+        CUBA Vegas (importance sampling MC): 13.0854     +/- 6.1e-3 (0.8 sig)
+        lifted tropical MC (k=2, 2e5):       12.79       +/- 0.34   (0.9 sig)
+    Vegas succeeds on the direct integrand where plain UNIFORM sampling
+    fails (cf. Example 20) because it adapts its sampling density.  Note:
+    the lifted-MC sample error shrinks slower than 1/sqrt(N) here
+    (residual tail), so expect 1-2 sigma agreement, with Cuhre as referee.
+
+Example 23: CUBA cross-check with complex exponent + small coefficients
+    Int dx1 dx2 / (1 + 10^-3 x1^2 + x2^2 + 10^-2 x1*x2^2)^{2+I/2}
+    (Example 19's case.)  Lifting is unavailable for complex exponents, so
+    the tropical MC runs unlifted: its error bars are honest but large
+    (heavy-tail sector; ~18% at 2e6 samples, consistent within ~0.6 sigma).
+    CUBA Cuhre provides the precise independent reference
+    18.4048600938 - 8.4410359515 I (matches NIntegrate to ~1e-7).
+
+MC vs VEGAS parity demo (EXAMPLES/test_vegas.wl, requires CUBA): runs the same
+specs through the pipeline BOTH ways (Integrator -> "MC" and "VEGAS") and asserts
+they return the same value within combined error, with VEGAS 1-3 orders tighter.
+Cases V1 (A_simplex n=2,4; exact 1/(n+1)!), V2 (A_i=-1/2 sqrt-edge n=4; exact
+pi^(n/2) Gamma(n/2+1)/n!), V3 (complex B, lam scan vs NIntegrate; ncomp=2), V4
+(coefficient batch scan, 24 sets; exact 1/(120 c0^2 prod c_i)), and L (lifted +
+VEGAS reachability, documenting the domain-cutoff bias).  See §2e.
+
+
+7.  USAGE
+================================================================================
+
+Minimal example (denominator only):
+
+    Get["tropical_eval.wl"];
+
+    poly = 1 + 2 x[1]^2 + x[2]^2 + x[1] x[2]^2;
+    vars = {x[1], x[2]};
+
+    spec = <|
+      "Polynomials"        -> {poly},
+      "MonomialExponents"  -> {0, 0},
+      "PolynomialExponents"-> {-2},
+      "Variables"          -> vars,
+      "KinematicSymbols"   -> {},
+      "RegulatorSymbol"    -> None
+    |>;
+
+    verts   = PolytopeVertices[poly^(-1), vars];
+    fanData = ComputeDecomposition[verts];
+
+    vr = ValidateDecomposition[spec, fanData, {}, 3];
+    Print["Rel error: ", vr["RelativeError"]];
+
+Numerator + denominator example:
+
+    pNum = 1 + x[1];
+    pDen = 1 + x[1]^2 + x[2]^2;
+    vars = {x[1], x[2]};
+
+    spec = <|
+      "Polynomials"        -> {pNum, pDen},
+      "MonomialExponents"  -> {0, 0},
+      "PolynomialExponents"-> {3/2, -3},           (* numerator^{3/2} * denom^{-3} *)
+      "Variables"          -> vars,
+      "KinematicSymbols"   -> {},
+      "RegulatorSymbol"    -> None
+    |>;
+
+    (* Fan: just multiply polynomials, no powers needed *)
+    verts   = PolytopeVertices[(pNum * pDen)^(-1), vars];
+    fanData = ComputeDecomposition[verts];
+
+    vr = ValidateDecomposition[spec, fanData, {}, 3];
+    Print["Rel error: ", vr["RelativeError"]];
+
+Kinematic scan (one compile, many evaluations):
+
+    poly = c0 + c1 x[1]^2 + c2 x[2]^2;
+    vars = {x[1], x[2]};
+
+    spec = <|
+      "Polynomials"        -> {poly},
+      "MonomialExponents"  -> {0, 0},
+      "PolynomialExponents"-> {-2},
+      "Variables"          -> vars,
+      "KinematicSymbols"   -> {c0, c1, c2},
+      "RegulatorSymbol"    -> None
+    |>;
+
+    (* Fan from unit-coefficient proxy *)
+    verts   = PolytopeVertices[(1 + x[1]^2 + x[2]^2)^(-1), vars];
+    fanData = ComputeDecomposition[verts];
+
+    (* 7200 kinematic points: one compile, one run *)
+    kinPoints = Table[{1.0, 0.5 + 0.01 i, 1.0 + 0.005 i}, {i, 7200}];
+    results = EvaluateTropicalMC[spec, fanData, kinPoints];
+
+Command line (run ONE AT A TIME -- shared INTERFILES/, see §5):
+
+    wolframscript -file EXAMPLES/tropical_eval_examples.wl    (Examples 1-14)
+    wolframscript -file EXAMPLES/run_validation_suite.wl      (Examples 1-14 + RunAllTests suite)
+    wolframscript -file EXAMPLES/tropical_eval_examples2.wl   (Examples 15-20)
+    wolframscript -file EXAMPLES/tropical_eval_examples3.wl   (Examples 21-23)
+    wolframscript -file EXAMPLES/test_seedbase.wl             (SeedBase runtime-argv override)
+    wolframscript -file EXAMPLES/test_lifted.wl               (Test 23)
+    wolframscript -file EXAMPLES/test_cuba.wl                 (CUBA cross-check)
+    wolframscript -file EXAMPLES/test_vegas.wl                (MC vs VEGAS parity; requires CUBA)
+
+
+8.  AUXILIARY-VARIABLE LIFTING  (Phase 3 addition)
+================================================================================
+
+8a.  MOTIVATION
+--------------------------------------------------------------------------------
+
+When a polynomial has one coefficient that is orders of magnitude larger than
+the others (e.g. P = 1 + 10^6 x1^2 + x2^2), the tropical fan is built from
+the unit-coefficient proxy (the fan is coefficient-independent).  However, the
+numerically dominant monomial in a given region may differ from the tropically
+dominant monomial.  This mismatch does not affect correctness (the tropical
+factoring is an exact identity) but can increase the per-sample variance.
+
+The "auxiliary-variable lifting" technique replaces a selected extreme
+coefficient C in monomial x^alpha by an auxiliary variable z^k so that
+z0 = C^(1/k) and C = z0^k.  The integral is then:
+
+    I = Integral dz delta(z - z0) * Integral[lifted integrand]
+
+The delta function is resolved analytically via the delta-elimination
+procedure (§8c below), and the resulting lifted integrand is evaluated
+on the (n+1)-dimensional tropical fan of the lifted polynomial.  In many
+cases this produces a substantial reduction in per-sample variance.
+
+
+8b.  NEW PUBLIC FUNCTIONS
+--------------------------------------------------------------------------------
+
+DetectExtremeCoefficients[integrandSpec, threshold]
+    Scans all polynomial monomials (via ParsePolynomial) and returns every
+    monomial whose NUMERIC coefficient satisfies Abs[C] < 1/threshold or
+    Abs[C] > threshold (default threshold 1000).  Symbolic / kinematic
+    coefficients are skipped (magnitude unknown at lift time).
+    Returns a list of Associations, each with keys:
+        "PolyIndex"       -> which polynomial (1-indexed)
+        "ExponentVector"  -> exponent vector of the extreme monomial
+        "Coefficient"     -> the coefficient value
+        "Magnitude"       -> Abs[N[coefficient]]
+        "SuggestedK"      -> suggested lift power (currently always 1)
+    Useful for identifying which coefficients to lift.
+
+LiftCoefficients[integrandSpec, liftRules]
+    Applies the lifting transformation to a list of rules.  Each rule is an
+    Association with keys "PolyIndex", "ExponentVector", "k".
+    Returns an Association with keys:
+        "LiftedSpec"      -> new IntegrandSpec with the auxiliary variable z
+                            appended to "Variables" (symbol x[n+1])
+        "LiftData"        -> Association with keys:
+                               "z0"           -> the anchor value z0 = C^(1/k)
+                               "AuxIndex"     -> index of the new variable (n+1)
+                               "AuxVariable"  -> x[n+1]
+                               "Rules"        -> the list of lift rules applied
+                               "OriginalSpec" -> copy of the input spec
+
+ProcessSectorLifted[liftedSpec, dualVertices, simplex, coneIndex, liftData]
+    Extends ProcessSector to the (n+1)-dimensional lifted problem.  After
+    computing the standard sector data, it performs the delta-elimination step:
+    it identifies a pivot variable p (the variable to integrate against the
+    delta function) and performs the monomial substitution y_p = z0 * h(y_{-p})
+    to reduce the dimension by 1.
+
+    Pivot selection (AMENDED ranking -- owner-approved, deviates from §3.5):
+        Priority 1: prefer pivots that preserve the constant term after
+                    re-clearing (HasConstantTerm = True).
+        Priority 2: among those, prefer |m_p| = 1 (unit pivot exponent).
+        Priority 3: among ties, prefer max min Re[atilde_i] (best integrability
+                    margin).
+    The pivot ranking was amended from the original plan (which put |m_p|=1
+    first) to reduce the risk of infinite true variance from heavy-tailed
+    sectors.
+
+    Returns: SectorData Association (same schema as ProcessSector) extended
+    with lifted-specific keys:
+        "HasConstantTerm" -> True/False
+        "EmptyDomain"     -> True if the delta constraint is inconsistent
+                            (no valid y_p satisfying the substitution)
+        "PivotIndex"      -> p
+        "PivotExponent"   -> m_p
+        "Atilde"          -> the (n-1)-vector of effective exponents after
+                            the monomial substitution
+
+    If no admissible pivot exists: fires TropicalEval::liftnopivot, returns
+    $Failed.
+    If pivot leads to complex-valued substitution: fires TropicalEval::liftcomplex,
+    returns $Failed.
+    If the resulting atilde has non-positive real part: fires
+    TropicalEval::liftdivergent, returns $Failed.
+
+ValidateLiftedDecomposition[liftedSpec, fanData, liftData, testKinematics, precisionGoal]
+    Validates a lifted sector decomposition.  Runs each lifted sector through
+    ProcessSectorLifted, sums the sector NIntegrate results, compares against
+    direct NIntegrate of the original (unlifted) integral.
+    Returns: Association with keys DirectResult, SectorSum, RelativeError,
+    SectorResults, DroppedSectors (count of EmptyDomain drops).
+
+FlattenSector[sectorData]
+    (Internal helper, also available publicly.)  Given a SectorData association
+    that has already had ProcessSectorLifted applied, applies the flattening
+    substitution to the 2D cleared polynomial.  Used by ValidateLiftedDecomposition
+    and EvaluateTropicalMCLifted.
+
+EvaluateTropicalMCLifted[integrandSpec, kinematicPoints, opts]
+    Top-level driver for the lifted pipeline.  Analogous to EvaluateTropicalMC
+    but applies the auxiliary-variable lifting before sector processing.
+    Options (in addition to all EvaluateTropicalMC options):
+        "LiftRules"  -> list of lift-rule Associations (required if lifting;
+                       each has "PolyIndex", "ExponentVector", "k").
+                       Default: Automatic (calls DetectExtremeCoefficients
+                       and selects the most extreme coefficient).
+        "FanData"    -> explicit fan for the LIFTED polynomial.  Default:
+                       Automatic (calls PolytopeVertices + ComputeDecomposition
+                       on the lifted polynomial).  Must be provided explicitly
+                       when the lifted Newton polytope is lower-dimensional
+                       (degenerate polytope; see §8f).
+    Returns: Association with key "Results" containing a list of per-kinematic-
+    point Associations.  Each result association has keys:
+        "Re"    -> real part of the MC estimate
+        "ReErr" -> standard error on the real part
+        "Im"    -> imaginary part
+        "ImErr" -> standard error on the imaginary part
+    Additional top-level keys: "ConvergentSectors".
+
+
+8c.  DELTA-ELIMINATION PROCEDURE
+--------------------------------------------------------------------------------
+
+Given the lifted polynomial P_lift(y1,...,y_n, z) and the anchor z0, the
+delta(z - z0) factor is resolved as follows.
+
+1.  Compute the (n+1)-dimensional sector data via ProcessSector.  This gives
+    a cleared polynomial in (y1,...,y_{n+1}) and effective exponents
+    a_eff = (a1,...,a_{n+1}).
+
+2.  The delta function in the original z-variable translates (via the monomial
+    substitution z = prod_j y_j^{M_{n+1,j}}) to a delta constraint relating
+    the y_j variables.
+
+3.  Select a pivot p in {1,...,n+1}.  The pivot variable y_p is expressed in
+    terms of the other y_j via the delta constraint:
+
+        y_p = z0^{1/m_p} * prod_{j!=p} y_j^{-M_{n+1,j}/m_p}
+
+    where m_p = M_{n+1,p} is the z-row entry for the pivot variable.
+
+4.  Substitute into the cleared polynomial.  This may require re-clearing
+    (if the substitution introduces negative y-exponents) and yields a
+    2-variable polynomial Q_tilde(y_{i1}, y_{i2}) with effective exponents
+    atilde.
+
+5.  If Re(atilde_i) > 0 for all i (and the domain constraint is non-empty),
+    the sector is convergent and contributed normally to the MC sum.
+
+6.  If the domain constraint z0^{1/m_p} * (...) is inconsistent (e.g. requires
+    y_p outside [0,inf)), the sector is tagged EmptyDomain and dropped.
+
+
+8d.  NEW ERROR MESSAGES
+--------------------------------------------------------------------------------
+
+TropicalEval::liftidentity
+    Fired when the requested lift rule corresponds to a monomial whose
+    coefficient is already 1 (no lifting needed).
+
+TropicalEval::liftnopivot
+    Fired by ProcessSectorLifted when no admissible pivot can be found:
+    all candidate pivots produce atilde with a non-positive component.
+    The sector returns $Failed and is skipped.
+
+TropicalEval::liftcomplex
+    Fired when the pivot substitution z0^{1/m_p} would require a complex
+    root of a negative number (e.g. m_p = 2 with z0 < 0).  The sector
+    returns $Failed and is skipped.
+
+TropicalEval::liftdivergent
+    Fired when all admissible pivots give Re(atilde_i) <= 0 for some i,
+    indicating the lifted sector integral diverges.  The sector returns
+    $Failed and is skipped.
+
+TropicalEval::liftfandim
+    Fired when the supplied FanData has simplex dimension inconsistent
+    with the (n+1)-dimensional lifted problem (e.g. simplices of length
+    n+1 expected but length n provided).
+
+TropicalEval::liftdegenerate
+    Fired by EvaluateTropicalMCLifted when Automatic fan detection is
+    requested but the lifted polynomial has fewer than (n+2) monomials or
+    its Newton polytope is lower-dimensional.  In this case Polymake cannot
+    produce a full-dimensional simplicial fan.  The caller must supply an
+    explicit fan via the "FanData" option (see §8f).
+
+
+8e.  USING THE LIFTDATA DRIVER OPTION
+--------------------------------------------------------------------------------
+
+EvaluateTropicalMCLifted accepts a "LiftRules" option which specifies which
+monomial(s) to lift and with what k-value.  Internally the driver calls
+LiftCoefficients to build the LiftData structure.  Users can inspect the
+LiftData (returned by LiftCoefficients) to understand:
+
+  - Which auxiliary variable was introduced (AuxVariable)
+  - What anchor value z0 = C^(1/k) was used
+  - The lifted integrand specification (LiftedSpec)
+  - The original specification (OriginalSpec)
+
+The "FanData" option accepts either Automatic (the default) or an explicit
+{dualVertices, simplexList} pair.  Explicit fan data is required whenever
+the lifted Newton polytope is lower-dimensional (§8f).
+
+
+8f.  DEGENERATE-LIFTED-POLYTOPE LIMITATION
+--------------------------------------------------------------------------------
+
+When the polynomial to be lifted has very few distinct monomials, the lifted
+polynomial P_lift = P[z^k replacing C*x^alpha] may also have few monomials.
+If the lifted polynomial has fewer monomials than (n+2) in (n+1) variables,
+or if those monomials lie in a lower-dimensional affine subspace of R^{n+1},
+the Newton polytope is lower-dimensional and Polymake cannot produce a
+full-dimensional simplicial fan.
+
+In this case EvaluateTropicalMCLifted fires TropicalEval::liftdegenerate and
+returns $Failed unless the caller supplies an explicit fan via "FanData".
+
+Example: P = 1 + 10^8 x1^3 x2 + x2^3 (Test 6 Case C).  After lifting the
+10^8 x1^3*x2 monomial with z^k, the lifted polynomial has exactly 3 monomials
+in (x1,x2,z)-space.  Their exponent vectors {0,0,0}, {0,3,0}, {3,1,k} span
+only a 2D affine subspace of R^3.  For any k, the automatic fan detection
+fires liftdegenerate.
+
+The explicit fan must cover all of R^3.  For this polynomial (lineality direction
+L = (k,0,-3) for z_0 = 10^(8/k)), a valid 5-ray + 6-simplex fan is:
+    Rays: {1,0,0}, {0,1,0}, {-1,-3,0}, {k,0,-3}, {-k,0,3}
+    Simplices: {1,2,4},{2,3,4},{3,1,4},{1,2,5},{2,3,5},{3,1,5}
+(Validated via ValidateLiftedDecomposition, RelErr < 1%.)
+
+IMPORTANT CAVEAT: For this polynomial, ALL lifted sectors have
+HasConstantTerm=False regardless of k.  This is because after delta-elimination
+via the z-coordinate pivot, the re-cleared polynomial in (x1,x2) lacks a
+constant term.  This means:
+  - The integrand is not in L^2 on [0,1]^2 for B << 0, so the true variance
+    may be infinite.
+  - The sample-based sigma (from finite MC) underestimates the true sigma.
+  - The MC estimate may significantly underestimate the true integral value.
+  - Variance comparison between unlifted and lifted is unreliable for this case.
+
+This is a structural limitation of the current implementation when lifting a
+polynomial whose support has an extreme geometry.
+
+
+8g.  PIVOT RANKING DEVIATION FROM PLAN §3.5
+--------------------------------------------------------------------------------
+
+The original migration plan (§3.5) specified the following pivot ranking:
+    (1) |m_p| = 1  (unit pivot exponent)
+    (2) max min Re[atilde_i]  (best integrability margin)
+
+After testing on Toy 1 and Toy 2 (see SANDBOX/phase1_results.txt), the ranking
+was amended (owner-approved) to:
+    (1) HasConstantTerm = True after re-clearing  (constant-term preservation)
+    (2) |m_p| = 1
+    (3) max min Re[atilde_i]
+
+The amendment is motivated by the observation that sectors with
+HasConstantTerm=False can have infinite true variance (L^2 non-integrability
+near the boundary), which makes them far more damaging to MC convergence than
+sectors with slightly worse atilde margin.  The amended ranking is implemented
+in ProcessSectorLifted and reflected in the test suite (Test 23, §8h).
+
+
+8h.  TEST 23  (EXAMPLES/test_lifted.wl)
+--------------------------------------------------------------------------------
+
+Test 23 covers four subtests for the lifting infrastructure:
+
+    RunTest23A: Exactness test on Toy 1
+        P = 1 + x1 + 10^{-6} x2, B={-3}, exact = 500000.
+        Uses an explicit fan (the automatic fan fires liftdegenerate).
+        Validates that ValidateLiftedDecomposition returns RelErr < 0.5%
+        and DroppedSectors == 3.  PASS criterion: RelErr < 0.5%.
+
+    RunTest23B: End-to-end C++ test on Case A
+        P = 1 + 10^6 x1^2 + x2^2 + x1*x2^2, B={-2}, ref ~ 7.850074e-4.
+        Runs EvaluateTropicalMCLifted with k=2 rule on the 10^6 x1^2 monomial.
+        PASS criterion: relErr < 1% (reference from NIntegrate).
+
+    RunTest23C: Error-path tests
+        (i)  liftcomplex: Builds a spec with B={-2+I} (complex exponent) and
+             iterates over the explicit fan sectors until TropicalEval::liftcomplex
+             fires.  PASS: liftcomplex fires at least once.
+        (ii) liftnopivot: Uses a carefully constructed minimal spec
+             (P = 1 + x3, MonomialExponents = {-5,-5,3}, PolynomialExponents = {-3})
+             together with a 2D fan in 3 variables where all pivot candidates
+             produce non-positive atilde components.  PASS: liftnopivot fires.
+
+    RunTest23D: Degenerate polytope (Toy 0)
+        P = 1 + 10^6 x1, B={-2}, exact ~ 10^{-6}.
+        The lifted polytope (k=1) is degenerate; an explicit 7-ray + 7-simplex
+        fan is supplied (from SANDBOX/sandbox_toy0_1d.wl).
+        PASS criterion: relErr < 0.1% and 4 dropped sectors.
+
+All four subtests must PASS for Test 23 to PASS.
+
+
+8i.  BENCHMARK RESULTS  (SANDBOX/bench_lift_variance.wl)
+--------------------------------------------------------------------------------
+
+See SANDBOX/benchmark_results.md for full tables.  Summary:
+
+Case A: P = 1 + 10^6 x1^2 + x2^2 + x1*x2^2, B={-2}
+    sigma_unlifted = 0.01680,  sigma_lifted(k=2) = 0.003966
+    Variance reduction = 17.95x  -->  PASS (>= 10x criterion)
+    Note: 1 of 6 lifted sectors has HasConstantTerm=False; sample sigma
+    may be slightly optimistic for that sector.
+
+Case B: P = 10^{-4} + 10^4 x1^2 + 10^{-4} x2^2 + 10^4 x1 x2^2 + x1^2 x2, B={-2}
+    (Report-only, no >= 10x criterion.)
+    sigma_unlifted = 60005,  1-rule-k=2: sigma = 8723, VR = 47x.
+    Two-rule k=1 gives 2450x apparent reduction but MC estimate is 64% off
+    (one sector HasConstantTerm=False makes sample sigma optimistic).
+
+Case C: P = 1 + 10^8 x1^3*x2 + x2^3, B={-3}
+    sigma_unlifted = 0.03967,  sigma_lifted(k=2,k=4) = 0.08236
+    Variance reduction = 0.232x  -->  FAIL (< 10x criterion)
+    Root cause: all 6 lifted sectors have HasConstantTerm=False (structural
+    limitation of degenerate lifted polytope; see §8f).  MC estimate is 40%
+    below NIntegrate.  Sample sigma is unreliable; FAIL is structural.

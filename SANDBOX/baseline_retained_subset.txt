@@ -1,0 +1,74 @@
+--- Test 1: Convergent 2D, real exponents ---
+Integral[0,Inf] dx1 dx2 / (1+2x1^2+x2^2+x1*x2^2+3x1^2*x2)^A
+  A = 2:
+    NIntegrate = 0.3610128558089914
+    Sector sum = 0.3610108194006753
+    Rel error  = 0.00021514468234327573
+    PASS
+  A = 3:
+    NIntegrate = 0.2030848147412046
+    Sector sum = 0.20308396820714944
+    Rel error  = 1.422065804097969*^-6
+    PASS
+--- Test 2: Convergent 2D, complex exponents ---
+Same integral, A = 2 + 0.5I
+  NIntegrate = 0.3112708835440054 - 0.12261694637657725*I
+  Sector sum = 0.3112722115271244 - 0.12261702711022615*I
+  Rel error  = 3.976775704064447*^-6
+  PASS
+--- Test 5: End-to-end kinematic scan ---
+Int dx1 dx2 / (1+lam*x1^2+x2^2+x1*x2^2)^{2+0.5I}
+100 values of lam in [0.1, 10]
+Computing NIntegrate reference values...
+  lam = 0.1: NIntegrate = 1.2962478746244144 - 0.5055060257843832*I
+  lam = 2.5000000000000004: NIntegrate = 0.3458404071535736 - 0.15189287047257896*I
+  lam = 5.: NIntegrate = 0.25325743594177885 - 0.11379471681008992*I
+  lam = 7.5: NIntegrate = 0.21029982268107403 - 0.09566172633787579*I
+  lam = 10.: NIntegrate = 0.18404860726744812 - 0.08441035745268657*I
+  lam = 0.1: sector rel err = 6.681586380305051*^-6 PASS
+  lam = 2.5000000000000004: sector rel err = 0.000012480950961781766 PASS
+  lam = 5.: sector rel err = 0.00004521180046562403 PASS
+  lam = 7.5: sector rel err = 0.000011455939851105183 PASS
+  lam = 10.: sector rel err = 7.097470058511195*^-6 PASS
+  Max relative error: 0.00004521180046562403
+  PASS
+--- Test 6: Large polynomial coefficients ---
+Verifies correctness when coefficients span many orders of magnitude
+
+  Case A: P = 1 + 10^6 x1^2 + x2^2 + x1*x2^2, exponent -2
+    NIntegrate = 0.0007850074779405956
+    Sector sum = 0.0007849539982702149
+    Rel error  = 0.00006716806309717654
+    PASS
+
+  Case B: coefficients from 10^-4 to 10^4, exponent -2
+    NIntegrate = 144.05784339471822
+    Sector sum = 144.04704179722273
+    Rel error  = 0.00007430672023202734
+    PASS
+
+  Case C: P = 1 + 10^8 x1^3*x2 + x2^3, exponent -3
+    NIntegrate = 0.00168407391187717
+    Sector sum = 0.00168677137414064
+    Rel error  = 0.0017634662035494381
+    PASS
+
+  PASS
+--- Test 7: Higher-dimensional integrals (3D and 4D) ---
+Tests that the pipeline works correctly in dimensions > 2
+
+  Case A (3D): P = 1 + x1^2 + x2^2 + x3^2 + x1*x2*x3, exponent -3
+    Fan: 6 rays, 8 sectors
+    NIntegrate = 0.26482423806498834
+    Sector sum = 0.2648333702850404
+    Rel error  = 0.00003448407939840415
+    PASS
+
+  Case B (4D): P = 1+x1^2+x2^2+x3^2+x4^2+x1*x2+x3*x4, exponent -4
+    Fan: 8 rays, 14 sectors
+    NIntegrate = 0.060936373306103325
+    Sector sum = 0.06094511956155343
+    Rel error  = 0.00014353094835767776
+    PASS
+
+  PASS

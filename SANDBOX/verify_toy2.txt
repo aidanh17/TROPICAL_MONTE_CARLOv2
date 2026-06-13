@@ -1,0 +1,101 @@
+========================================
+TOY2: P = 1 + 10^6 x1^2 + x2^2 + x1 x2^2,  B={-2}
+      Lift: 10^6 x1^2 -> z^2 x1^2,  z0=10^3
+========================================
+
+=== Unlifted baseline ===
+Unlifted fan: 4 sectors
+Running ValidateDecomposition (unlifted)...
+Unlifted direct NIntegrate = 0.0007850073982040128
+Unlifted sector sum        = 0.0007849842577801977
+Unlifted relative error    = 0.000029477969084282455
+Running unliftedSectorStats at 10^5 samples...
+Unlifted per-sector stats:
+  Sector 1: min|f|=1.0000903781686426*^-12  max|f|=0.9973889280594666  sigma=0.015019697832522442
+  Sector 2: min|f|=3.999976035251208*^-13  max|f|=3.999999996817384*^-13  sigma=4.961577178182612*^-19
+  Sector 3: min|f|=3.3505724020288657*^-13  max|f|=0.2876372849915291  sigma=0.005017420799867862
+  Sector 4: min|f|=1.3333265250752918*^-13  max|f|=1.4974189188090652*^-6  sigma=4.774269162917747*^-9
+Unlifted total sigma = 0.015835587594505256
+
+=== Lift: 10^6 x1^2 -> z^2 x1^2,  k=2,  z0=10^3 ===
+z0 = 1000
+Lifted poly: {1 + x[2]^2 + x[1]*x[2]^2 + x[1]^2*x[3]^2}
+Identity check: PASS
+Lifted fan: 8 sectors  (unlifted had 4)
+
+=== Per-sector delta elimination ===
+  Sector 1: Pivot=3  ATilde={1., 1.}  DomainConstraint=None  HasConstantTerm=True
+  Sector 2: Pivot=3  ATilde={2.5, 3.}  DomainConstraint=present  HasConstantTerm=True
+  Sector 3: Pivot=2  ATilde={2.5, 1.}  DomainConstraint=present  HasConstantTerm=True
+  Sector 4: EmptyDomain (dropped)
+  Sector 5: EmptyDomain (dropped)
+  Sector 6: Pivot=2  ATilde={1.5, 2.3333333333333335}  DomainConstraint=None  HasConstantTerm=True
+  Sector 7: Pivot=3  ATilde={2., 1.}  DomainConstraint=present  HasConstantTerm=False
+  Sector 8: Pivot=3  ATilde={4., 7.}  DomainConstraint=present  HasConstantTerm=False
+Non-empty sectors: 6  Empty: 2
+WARNING: 2 sector(s) have HasConstantTerm -> False:
+  Sector 7
+  Sector 8
+
+=== Exactness ===
+Running NIntegrate per sector (PG=3)...
+Sector NIntegrate values: {0.0004351833601730824, 5.89691401171292*^-7, 0.00017331038078819628, 2.9280216142838043*^-7, 0.0001739577323037141, 1.6825660758770862*^-6}
+Lifted total  = 0.0007850165329034695
+Direct NInt   = 0.0007850073982040128
+Relative error = 0.000011636450150150167
+TOY2 PASS relerr=0.000011636450150150167
+
+=== Variance comparison ===
+Running sectorMC at 10^5 per sector...
+Lifted per-sector MC:
+  Sector 1: feasFrac=1.  min|f|=0.00011122340833427879  max|f|=0.000999980369380451  StdErr=6.968308701875192*^-7  HasConstantTerm=True
+  Sector 2: feasFrac=0  min|f|=0  max|f|=0  StdErr=0  HasConstantTerm=True
+  Sector 3: feasFrac=0.00232  min|f|=0.023437042720747082  max|f|=0.18263571161874992  StdErr=0.000011872023051170384  HasConstantTerm=True
+  Sector 4: feasFrac=1.  min|f|=1.1725732139971928*^-7  max|f|=4.7618463612426884*^-7  StdErr=2.9886472816025893*^-10  HasConstantTerm=True
+  Sector 5: feasFrac=0.99995  min|f|=0.000027826084692888174  max|f|=0.2212694087922092  StdErr=2.68968149965904*^-6  HasConstantTerm=False
+  Sector 6: feasFrac=0  min|f|=0  max|f|=0  StdErr=0  HasConstantTerm=False
+
+--- HasConstantTerm=False sector magnitude analysis ---
+Sectors with HasConstantTerm=False: {7, 8}
+  Sector 7 (pos 5):   min|f|=0.000027826084692888174  max|f|=0.2212694087922092  feasFrac=0.99995
+  Sector 8 (pos 6):   min|f|=0  max|f|=0  feasFrac=0
+Sectors with HasConstantTerm=True: magnitude spreads:
+  Sector 1: min|f|=0.00011122340833427879  max|f|=0.000999980369380451
+  Sector 2: min|f|=0  max|f|=0
+  Sector 3: min|f|=0.023437042720747082  max|f|=0.18263571161874992
+  Sector 4: min|f|=1.1725732139971928*^-7  max|f|=4.7618463612426884*^-7
+
+
+========================================
+TOY2 FINAL SUMMARY BLOCK
+========================================
+Integral: P = 1 + 10^6 x1^2 + x2^2 + x1 x2^2,  B={-2}
+Reference (direct NIntegrate): 0.0007850073982040128
+
+--- Exactness ---
+Unlifted sector sum:  0.0007849842577801977  (relerr: 0.000029477969084282455)
+Lifted sector sum:    0.0007850165329034695  (relerr vs NInt: 0.000011636450150150167)
+
+--- Sector counts ---
+Unlifted: 4 sectors
+Lifted:   8 sectors total,  6 non-empty,  2 empty
+
+--- Sigma comparison ---
+Unlifted total sigma:  0.015835587594505256
+Lifted total sigma:    0.0038557086410684026
+Ratio (unlifted/lifted): 4.107049849626935
+
+--- HasConstantTerm=False sectors ---
+Count: 2
+  Sector 7: min|f|=0.000027826084692888174  max|f|=0.2212694087922092  feasFrac=0.99995
+  Sector 8: min|f|=0  max|f|=0  feasFrac=0
+--- Feasible fractions ---
+  Sector 1: 1.
+  Sector 2: 0
+  Sector 3: 0.00232
+  Sector 4: 1.
+  Sector 5: 0.99995
+  Sector 6: 0
+========================================
+TOY2 COMPLETE
+========================================

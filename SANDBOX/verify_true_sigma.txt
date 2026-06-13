@@ -1,0 +1,148 @@
+============================================================
+sandbox_true_sigma.wl  â TRUE SIGMA DIAGNOSTIC
+============================================================
+
+============================================================
+TOY1: P = 1 + x[1] + 10^-6 x[2],  B={-3},  exact = 500000
+============================================================
+Toy1 unlifted fan: 4 sectors
+
+=== TOY1 UNLIFTED ===
+Toy1 unlifted I1 sum = 499952.0687727737  (sanity gate: within 0.1% of 500000)
+Toy1 unlifted I1 sanity: PASS
+
+--- TOY1 unlifted per-sector results ---
+  Sector 1: I1=0.3750030512792435  I2=0.19375014161069595  Sigma=0.2304839541962803  I2Converged=True
+  Sector 2: I1=0.12499283919036255  I2=0.02031249984876937  Sigma=0.0684783907514008  I2Converged=True
+  Sector 3: I1=250001.95079050655  I2=1.2499903901950343*^22  Sigma=1.118029691103409*^11  I2Converged=True
+  Sector 4: I1=249949.6179863767  I2=DIVERGENT  Sigma=INF  I2Converged=False
+  TOTALSIGMA = INFINITE (divergent I2 in sectors {4})
+
+=== TOY1 LIFTED k=2 ===
+z0 = 1/1000
+  Sector 4: EmptyDomain (dropped)
+  Sector 5: EmptyDomain (dropped)
+  Sector 6: EmptyDomain (dropped)
+Non-empty sectors k=2: 3
+Toy1 k=2 I1 sum = 499960.3886856028  (sanity gate: within 0.1% of 500000)
+Toy1 k=2 I1 sanity: PASS
+
+--- TOY1 lifted k=2 per-sector results ---
+  Sector 1: I1=166653.46289520094  I2=DIVERGENT  Sigma=INF  I2Converged=False  HasConstantTerm=False
+  Sector 2: I1=166653.46289520094  I2=DIVERGENT  Sigma=INF  I2Converged=False  HasConstantTerm=False
+  Sector 3: I1=166653.46289520094  I2=DIVERGENT  Sigma=INF  I2Converged=False  HasConstantTerm=False
+  TOTALSIGMA = INFINITE (divergent I2 in sectors {1, 2, 3})
+
+=== TOY1 LIFTED k=1 ===
+z0 = 1/1000000
+  Sector 4: EmptyDomain (dropped)
+  Sector 5: EmptyDomain (dropped)
+  Sector 6: EmptyDomain (dropped)
+Non-empty sectors k=1: 3
+Toy1 k=1 I1 sum = 499960.3886856028  (sanity gate: within 0.1% of 500000)
+Toy1 k=1 I1 sanity: PASS
+
+--- TOY1 lifted k=1 per-sector results ---
+  Sector 1: I1=166653.46289520094  I2=DIVERGENT  Sigma=INF  I2Converged=False  HasConstantTerm=False
+  Sector 2: I1=166653.46289520094  I2=DIVERGENT  Sigma=INF  I2Converged=False  HasConstantTerm=False
+  Sector 3: I1=166653.46289520094  I2=DIVERGENT  Sigma=INF  I2Converged=False  HasConstantTerm=False
+  TOTALSIGMA = INFINITE (divergent I2 in sectors {1, 2, 3})
+
+============================================================
+TOY2: P = 1 + 10^6 x[1]^2 + x[2]^2 + x[1]x[2]^2,  B={-2}
+============================================================
+
+=== TOY2 UNLIFTED ===
+Toy2 unlifted fan: 4 sectors
+Toy2 unlifted I1 sum = 0.0007849539982702149  (sanity gate: within 0.1% of ~0.000785)
+Toy2 unlifted I1 sanity: PASS
+
+--- TOY2 unlifted per-sector results ---
+  Sector 1: I1=0.0005552852102318919  I2=0.0002487172110854199  Sigma=0.015760992018928176  I2Converged=True
+  Sector 2: I1=3.9999909829276873*^-13  I2=1.5999927863527429*^-25  Sigma=4.962196328981895*^-19  I2Converged=True
+  Sector 3: I1=0.00022966854656049175  I2=0.00002685872656896741  Sigma=0.005177449075335092  I2Converged=True
+  Sector 4: I1=2.410778322102351*^-10  I2=1.4781239811047612*^-12  Sigma=1.215781198648112*^-6  I2Converged=True
+  TOTALSIGMA = 0.016589600653015426
+
+=== TOY2 LIFTED k=2 ===
+z0 = 1000
+Toy2 lifted fan: 8 sectors
+  Sector 4: EmptyDomain (dropped)
+  Sector 5: EmptyDomain (dropped)
+Non-empty sectors toy2 lifted: 6
+Toy2 lifted I1 sum = 0.0007850165329034695  (sanity gate: within 0.1% of ~0.000785)
+Toy2 lifted I1 sanity: PASS
+
+--- TOY2 lifted per-sector results ---
+  Sector 1: I1=0.0004351833601730824  I2=2.3772279989764674*^-7  Sigma=0.00021985959821238643  I2Converged=True  HasConstantTerm=True
+  Sector 2: I1=5.89691401171292*^-7  I2=5.897059174484063*^-8  Sigma=0.00024283789656660268  I2Converged=True  HasConstantTerm=True
+  Sector 3: I1=0.00017331038078819628  I2=0.000015051171564986275  Sigma=0.0038757109124517176  I2Converged=True  HasConstantTerm=True
+  Sector 4: I1=2.9280216142838043*^-7  I2=9.468291667879463*^-14  Sigma=9.460344043248783*^-8  I2Converged=True  HasConstantTerm=True
+  Sector 5: I1=0.0001739577323037141  I2=2.9543857852113626*^-7  Sigma=0.0005149536735405289  I2Converged=True  HasConstantTerm=False
+  Sector 6: I1=1.6825660758770862*^-6  I2=DIVERGENT  Sigma=INF  I2Converged=False  HasConstantTerm=False
+  TOTALSIGMA = INFINITE (divergent I2 in sectors {6})
+
+
+=== TRUE SIGMA SUMMARY ===
+TOY1 unlifted : INF
+TOY1 lifted k=2: INF
+TOY1 lifted k=1: INF
+TOY1 ratio unlifted/lifted(k=2): N/A
+TOY2 unlifted : 0.0165896
+TOY2 lifted : INF
+TOY2 ratio unlifted/lifted: N/A
+
+=== I1 SANITY SUMMARY ===
+TOY1 unlifted I1 sum = 499952.0687727737  (exact=500000)
+TOY1 k=2 I1 sum = 499960.3886856028  (exact=500000)
+TOY1 k=1 I1 sum = 499960.3886856028  (exact=500000)
+TOY2 unlifted I1 sum = 0.0007849539982702149  (approx=0.000785)
+TOY2 lifted I1 sum = 0.0007850165329034695  (approx=0.000785)
+
+=== PART B: PER-PIVOT TABLES ===
+
+--- TOY1 lifted k=2 per-pivot tables ---
+Sector 1 (ConeIndex=1,  HasConstantTerm=False):
+  Pivot table (cone 1):
+  p | m_p | atilde (numeric) | admissible? | HasConstantTerm
+    p=3  m_p=1  atilde={2., 2.}  admissible=True  HasConst=False
+Sector 2 (ConeIndex=2,  HasConstantTerm=False):
+  Pivot table (cone 2):
+  p | m_p | atilde (numeric) | admissible? | HasConstantTerm
+    p=3  m_p=1  atilde={2., 2.}  admissible=True  HasConst=False
+Sector 3 (ConeIndex=3,  HasConstantTerm=False):
+  Pivot table (cone 3):
+  p | m_p | atilde (numeric) | admissible? | HasConstantTerm
+    p=3  m_p=1  atilde={2., 2.}  admissible=True  HasConst=False
+
+--- TOY1 lifted k=1 per-pivot tables ---
+Sector 1 (ConeIndex=1,  HasConstantTerm=False):
+  Pivot table (cone 1):
+  p | m_p | atilde (numeric) | admissible? | HasConstantTerm
+    p=3  m_p=1  atilde={2., 2.}  admissible=True  HasConst=False
+Sector 2 (ConeIndex=2,  HasConstantTerm=False):
+  Pivot table (cone 2):
+  p | m_p | atilde (numeric) | admissible? | HasConstantTerm
+    p=3  m_p=1  atilde={2., 2.}  admissible=True  HasConst=False
+Sector 3 (ConeIndex=3,  HasConstantTerm=False):
+  Pivot table (cone 3):
+  p | m_p | atilde (numeric) | admissible? | HasConstantTerm
+    p=3  m_p=1  atilde={2., 2.}  admissible=True  HasConst=False
+
+--- TOY2 lifted per-pivot tables (HasConstantTerm=False sectors) ---
+Sector 5 (ConeIndex=7,  HasConstantTerm=False):
+  Pivot table (cone 7):
+  p | m_p | atilde (numeric) | admissible? | HasConstantTerm
+    p=1  m_p=-3/2  atilde={2.3333333333333335, 0.6666666666666666}  admissible=True  HasConst=False
+    p=2  m_p=2  atilde={1.75, 0.5}  admissible=True  HasConst=True
+    p=3  m_p=-1  atilde={2., 1.}  admissible=True  HasConst=False
+Sector 6 (ConeIndex=8,  HasConstantTerm=False):
+  Pivot table (cone 8):
+  p | m_p | atilde (numeric) | admissible? | HasConstantTerm
+    p=1  m_p=3/4  atilde={3., 5.333333333333333}  admissible=True  HasConst=False
+    p=2  m_p=-3/2  atilde={1.5, 4.666666666666667}  admissible=True  HasConst=False
+    p=3  m_p=1  atilde={4., 7.}  admissible=True  HasConst=False
+
+============================================================
+sandbox_true_sigma.wl COMPLETE
+============================================================

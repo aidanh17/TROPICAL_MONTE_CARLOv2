@@ -1,0 +1,109 @@
+========================================
+TOY0: 1D example  I = Int_0^inf (1+10^6 x)^{-2} dx = 10^-6
+========================================
+
+--- Unlifted 1D sanity check ---
+Direct NIntegrate: 9.99999999969597*^-7
+Sector sum:        9.99999999998792*^-7
+Relative error:    2.9195108110375213*^-11
+
+
+========================================
+k=1: z0 = 10^6
+========================================
+z0 = 1000000
+Lifted poly: {1 + x[1]*x[2]}
+Identity check (k=1): PASS
+
+--- Â§3.6 hand-check: sector M={{1,1},{0,1}} must be EmptyDomain for z0=10^6 ---
+  M = {{1, 1}, {0, 1}}
+  z-row m = {0, 1}
+  a = {1, 2}
+  Â§3.6 check: EmptyDomain = True â PASS (z0=1000000 > 1, constant-root sector)
+
+--- k=1 all sectors ---
+  Sector 1 rays={{1, 0}, {0, 1}}  M={{-1, 0}, {0, -1}}  z-row={0, -1}  a={1, 1}
+    Pivot=2  ATilde={1}  Prefactor=1.*^-12
+    ClearedPolys (Qtilde)={{{1/1000000, {1}}, {1, {0}}}}
+    DomainConstraint=None
+    HasConstantTerm=True
+    NIntegrate = 9.999990000010013*^-13
+  Sector 2 rays={{0, 1}, {-1, 1}}  M={{0, 1}, {-1, -1}}  z-row={-1, -1}  a={1, 0}
+    Pivot=1  ATilde={1}  Prefactor=1.*^-12
+    ClearedPolys (Qtilde)={{{1/1000000, {0}}, {1, {1}}}}
+    DomainConstraint=<|LogZ0 -> Log[1000000], MP -> -1, IndicatorCoeffs -> {-1}|>
+    HasConstantTerm=True
+    NIntegrate = 4.999990000016448*^-7
+  Sector 3 rays={{-1, 1}, {-1, 0}}  M={{1, 1}, {-1, 0}}  z-row={-1, 0}  a={0, 1}
+    Pivot=1  ATilde={1}  Prefactor=1.*^-6
+    ClearedPolys (Qtilde)={{{1, {0}}, {1, {1}}}}
+    DomainConstraint=None
+    HasConstantTerm=True
+    NIntegrate = 5.000000000000217*^-7
+  Sector 4 rays={{-1, 0}, {-1, -1}}  M={{1, 1}, {0, 1}}  z-row={0, 1}  a={1, 2}
+    -> EmptyDomain (dropped)
+  Sector 5 rays={{-1, -1}, {0, -1}}  M={{1, 0}, {1, 1}}  z-row={1, 1}  a={2, 1}
+    -> EmptyDomain (dropped)
+  Sector 6 rays={{0, -1}, {1, -1}}  M={{0, -1}, {1, 1}}  z-row={1, 1}  a={1, 0}
+    -> EmptyDomain (dropped)
+  Sector 7 rays={{1, -1}, {1, 0}}  M={{-1, -1}, {1, 0}}  z-row={1, 0}  a={0, 1}
+    -> EmptyDomain (dropped)
+
+k=1 total sector sum = 1.0000000000006664*^-6
+Exact = 1/1000000
+TOY0 k=1 PASS relerr=6.664031712523208*^-13
+
+
+========================================
+k=2: z0 = 10^3
+========================================
+z0 = 1000
+Lifted poly: {1 + x[1]*x[2]^2}
+Identity check (k=2): PASS
+k=2 sectors (unimodular): 10
+
+--- k=2 all sectors ---
+  Sector 1 rays={{1, 0}, {0, 1}}  M={{-1, 0}, {0, -1}}  z-row={0, -1}  a={1, 3}
+    Pivot=2  ATilde={1}  Prefactor=1.*^-12
+    ClearedPolys (Qtilde)={{{1/1000000, {1}}, {1, {0}}}}
+    DomainConstraint=None
+    HasConstantTerm=True
+    NIntegrate = 9.999990000010013*^-13
+  Sector 2 rays={{0, 1}, {-1, 2}}  M={{0, 1}, {-1, -2}}  z-row={-1, -2}  a={3, 5}
+    Pivot=1  ATilde={1}  Prefactor=1.*^-12
+    ClearedPolys (Qtilde)={{{1/1000000, {0}}, {1, {1}}}}
+    DomainConstraint=<|LogZ0 -> Log[1000], MP -> -1, IndicatorCoeffs -> {-2}|>
+    HasConstantTerm=True
+    NIntegrate = 3.0621777633304617*^-11
+  Sector 3 rays={{-1, 2}, {-1, 1}}  M={{1, 1}, {-2, -1}}  z-row={-2, -1}  a={5, 2}
+    Pivot=2  ATilde={1}  Prefactor=1.*^-9
+    ClearedPolys (Qtilde)={{{1/1000, {1}}, {1, {0}}}}
+    DomainConstraint=<|LogZ0 -> Log[1000], MP -> -1, IndicatorCoeffs -> {-2}|>
+    HasConstantTerm=True
+    NIntegrate = 9.673792223676946*^-10
+  Sector 4 rays={{-1, 1}, {-1, 0}}  M={{1, 1}, {-1, 0}}  z-row={-1, 0}  a={2, 1}
+    Pivot=1  ATilde={1}  Prefactor=1.*^-9
+    ClearedPolys (Qtilde)={{{1/1000, {0}}, {1, {1}}}}
+    DomainConstraint=None
+    HasConstantTerm=True
+    NIntegrate = 9.99000999000999*^-7
+  Sector 5 rays={{-1, 0}, {-1, -1}}  M={{1, 1}, {0, 1}}  z-row={0, 1}  a={1, 2}
+    -> EmptyDomain (dropped)
+  Sector 6 rays={{-1, -1}, {-1, -2}}  M={{1, 1}, {1, 2}}  z-row={1, 2}  a={2, 3}
+    -> EmptyDomain (dropped)
+  Sector 7 rays={{-1, -2}, {0, -1}}  M={{1, 0}, {2, 1}}  z-row={2, 1}  a={3, 1}
+    -> EmptyDomain (dropped)
+  Sector 8 rays={{0, -1}, {1, -2}}  M={{0, -1}, {1, 2}}  z-row={1, 2}  a={1, 1}
+    -> EmptyDomain (dropped)
+  Sector 9 rays={{1, -2}, {1, -1}}  M={{-1, -1}, {2, 1}}  z-row={2, 1}  a={1, 0}
+    -> EmptyDomain (dropped)
+  Sector 10 rays={{1, -1}, {1, 0}}  M={{-1, -1}, {1, 0}}  z-row={1, 0}  a={0, 1}
+    -> EmptyDomain (dropped)
+
+k=2 total sector sum = 1.0000000000000002*^-6
+Exact = 1/1000000
+TOY0 k=2 PASS relerr=2.1175823681357508*^-16
+
+========================================
+TOY0 COMPLETE
+========================================

@@ -1,0 +1,149 @@
+========================================
+TOY1: I(eps) = Int (1 + x1 + eps^2 x2)^{-3} dx1 dx2
+      eps=10^-3,  exact = 1/(2 eps^2) = 500000
+========================================
+exact = 500000
+
+=== STEP 2: Unlifted baseline ===
+Unlifted fan: 4 sectors
+Dual verts: {{1, 0}, {0, 1}, {-1, 0}, {0, -1}}
+Unlifted direct NIntegrate = 499888.0302476812
+Unlifted sector sum        = 499952.0687727737
+Unlifted relative error    = 0.00012810573812059982
+Running unliftedSectorStats at 10^5 samples...
+Unlifted per-sector statistics:
+  Sector 1: min|f|=0.12499984216932822  max|f|=0.9999971618165402  sigma=0.22983024335291616  mean=0.3735089489122088
+  Sector 2: min|f|=0.06250050112621648  max|f|=0.49745501746834686  sigma=0.0686734715816357  mean=0.12517707641345002
+  Sector 3: min|f|=0.06290540774208085  max|f|=3.633762972277384*^7  sigma=116254.94129152785  mean=496.9526268648108
+  Sector 4: min|f|=0.03136349157815006  max|f|=7.267371531822197*^6  sigma=23215.662870826072  mean=100.19225873828944
+Unlifted total sigma = 118550.32002186235
+
+=== STEP 3: Lift k=2 (z0 = 10^-3 exact) ===
+z0 = 1/1000
+Lifted poly: {1 + x[1] + x[2]*x[3]^2}
+Lifted variables: {x[1], x[2], x[3]}
+Identity check (k=2): PASS
+
+=== STEP 4: Lifted fan k=2 ===
+Lifted k=2 fan: 6 sectors  (unlifted had 4)
+Principal dual verts (k=2): {{1, 0, 0}, {0, 1, 0}, {-1, -1, 0}, {0, 2, -1}, {0, -2, 1}}
+Principal simplices: {{1, 2, 4}, {2, 3, 4}, {3, 1, 4}, {1, 2, 5}, {2, 3, 5}, {3, 1, 5}}
+Note: principled normal fan â 6 sectors, simplicial, dominance-preserving
+
+=== STEP 5: Per-sector (k=2) ===
+  Sector 1:
+    Pivot=3  ZRow={0, 0, 1}  ATilde={2, 2}
+    DomainConstraint=None
+    HasConstantTerm=False
+  Sector 2:
+    Pivot=3  ZRow={0, 0, 1}  ATilde={2, 2}
+    DomainConstraint=None
+    HasConstantTerm=False
+  Sector 3:
+    Pivot=3  ZRow={0, 0, 1}  ATilde={2, 2}
+    DomainConstraint=None
+    HasConstantTerm=False
+  Sector 4:
+    EmptyDomain -> True (dropped)
+  Sector 5:
+    EmptyDomain -> True (dropped)
+  Sector 6:
+    EmptyDomain -> True (dropped)
+Non-empty sectors k=2: 3
+
+=== STEP 6: Exactness k=2 ===
+Running NIntegrate per sector (k=2, PG=3)...
+k=2 sector NIntegrate results: {166653.46289520094, 166653.46289520094, 166653.46289520094}
+k=2 total = 499960.3886856028
+Exact     = 500000
+k=2 relative error = 0.00007922262879437767
+TOY1 k=2 PASS relerr=0.00007922262879437767
+Unlifted sector sum = 499952.0687727737
+
+=== STEP 7: Variance comparison k=2 ===
+Running sectorMC at 10^5 per sector (k=2)...
+k=2 MC results per sector:
+  Sector 1: feasFrac=1.  min|f|=9268.305588072586  max|f|=5.794336606671455*^8  StdErr=7659.6433004234095
+  Sector 2: feasFrac=1.  min|f|=9281.349543262055  max|f|=1.3327441359290099*^8  StdErr=3809.6162963256193
+  Sector 3: feasFrac=1.  min|f|=9309.272135448042  max|f|=9.809327199222356*^8  StdErr=11349.628532780865
+k=2 lifted total sigma   = 4.494411859710506*^6
+Unlifted total sigma     = 118550.32002186235
+Sigma ratio (unlifted/lifted) = 0.02637727109181721
+
+=== STEP 8: k=1 (z0=10^-6) ===
+z0 = 1/1000000
+Lifted poly (k=1): {1 + x[1] + x[2]*x[3]}
+k=1 fan: 6 sectors
+  Sector 1:
+    Pivot=3  ZRow={0, 0, 1}  ATilde={2, 2}
+    DomainConstraint=None
+    HasConstantTerm=False
+  Sector 2:
+    Pivot=3  ZRow={0, 0, 1}  ATilde={2, 2}
+    DomainConstraint=None
+    HasConstantTerm=False
+  Sector 3:
+    Pivot=3  ZRow={0, 0, 1}  ATilde={2, 2}
+    DomainConstraint=None
+    HasConstantTerm=False
+  Sector 4:
+    EmptyDomain -> True (dropped)
+  Sector 5:
+    EmptyDomain -> True (dropped)
+  Sector 6:
+    EmptyDomain -> True (dropped)
+Non-empty sectors k=1: 3
+Running NIntegrate per sector (k=1, PG=3)...
+k=1 total = 499960.3886856028  exact = 500000
+TOY1 k=1 PASS relerr=0.00007922262879437767
+Running sectorMC at 10^5 per sector (k=1)...
+  Sector 1: feasFrac=1.  min|f|=9284.416316743927  max|f|=9.204595459948789*^8  StdErr=11206.880229886961
+  Sector 2: feasFrac=1.  min|f|=9295.246003440076  max|f|=2.3156562985897982*^8  StdErr=5031.378628204612
+  Sector 3: feasFrac=1.  min|f|=9289.304166712289  max|f|=3.5303239098350704*^8  StdErr=7164.2907539755515
+k=1 lifted total sigma = 4.497065681028963*^6
+
+
+========================================
+TOY1 FINAL SUMMARY BLOCK
+========================================
+Integral: I = Int_{[0,inf)^2} (1 + x1 + 10^-6 x2)^{-3} dx1 dx2
+Exact:    500000
+
+--- Exactness ---
+Unlifted NIntegrate:  499888.0302476812  (sector sum: 499952.0687727737)
+k=2 sector sum:  499960.3886856028  (relerr vs exact: 0.00007922262879437767)
+k=1 sector sum:  499960.3886856028  (relerr vs exact: 0.00007922262879437767)
+
+--- Sector counts ---
+Unlifted:         4 sectors
+Lifted k=2:       6 sectors total, 3 non-empty
+Lifted k=1:       6 sectors total, 3 non-empty
+
+--- Sigma comparison ---
+Unlifted total sigma:  118550.32002186235
+Lifted k=2 sigma:      4.494411859710506*^6
+Lifted k=1 sigma:      4.497065681028963*^6
+Ratio unlifted/k=2:    0.02637727109181721
+Ratio unlifted/k=1:    0.026361705260826238
+
+--- Feasible fractions (k=2) ---
+  Sector 1: 1.
+  Sector 2: 1.
+  Sector 3: 1.
+--- Feasible fractions (k=1) ---
+  Sector 1: 1.
+  Sector 2: 1.
+  Sector 3: 1.
+
+--- HasConstantTerm ---
+k=2:
+  Sector 1: HasConstantTerm=False
+  Sector 2: HasConstantTerm=False
+  Sector 3: HasConstantTerm=False
+k=1:
+  Sector 1: HasConstantTerm=False
+  Sector 2: HasConstantTerm=False
+  Sector 3: HasConstantTerm=False
+========================================
+TOY1 COMPLETE
+========================================

@@ -1,0 +1,307 @@
+z0_sweep_common.wl loaded: NSamples=1000000  seeds={42, 101, 202, 303, 404}  tau=1000
+============================================================
+z0_sweep_battery: tiers={1, 2, 3, 4, 5}  N=200000  seeds={42, 101}  fast=True
+============================================================
+
+========== TIER 1 ==========
+
+### T1a (T1)  |C|=1000.  k*=1
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp
+  4 convergent sectors
+  Total: 4 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:54:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:71:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:112:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+5 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc
+  unlifted: sigmaSample=0.09099981596467221 sigmaTrue=Infinity sigmaTrueConv=0.08675121648897567 truth=0.024475582959177598 trusted=True
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp
+  6 convergent sectors
+  Total: 6 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:58:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:79:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:96:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_4(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:117:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_5(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:164:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+7 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp
+  6 convergent sectors
+  Total: 6 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:58:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:79:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:96:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_4(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:117:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_5(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:164:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+7 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc
+Wrote 4 rows to /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/../AUXT/z0_sweep_results.csv
+
+### T1b (T1)  |C|=10000.  k*=2
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp
+  4 convergent sectors
+  Total: 4 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:54:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:71:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:112:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+5 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc
+  unlifted: sigmaSample=0.05262673761106572 sigmaTrue=0.05205837540593771 sigmaTrueConv=0.05205837540593771 truth=0.007816047200882846 trusted=True
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp
+  6 convergent sectors
+  Total: 6 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:58:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:79:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:96:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_4(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:117:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_5(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:164:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+7 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp
+  6 convergent sectors
+  Total: 6 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:58:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:79:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:96:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_4(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:117:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_5(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:164:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+7 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc
+Wrote 8 rows to /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/../AUXT/z0_sweep_results.csv
+
+### T1c (T1)  |C|=1.*^6  k*=2
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp
+  4 convergent sectors
+  Total: 4 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:54:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:71:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:112:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+5 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc
+  unlifted: sigmaSample=0.016988360982129847 sigmaTrue=0.01658965697013982 sigmaTrueConv=0.01658965697013982 truth=0.0007850074779405956 trusted=True
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp
+  6 convergent sectors
+  Total: 6 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:58:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:79:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:96:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_4(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:117:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_5(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:164:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+7 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc
+Wrote 10 rows to /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/../AUXT/z0_sweep_results.csv
+
+### T1d (T1)  |C|=1.*^7  k*=3
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp
+  4 convergent sectors
+  Total: 4 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:54:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:71:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:112:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+5 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc
+  unlifted: sigmaSample=0.009909955361740181 sigmaTrue=0.009334493931450766 sigmaTrueConv=0.009334493931450766 truth=0.0002483255067207753 trusted=True
+Generated C++ Monte Carlo code: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp
+  6 convergent sectors
+  Total: 6 integrand functions
+Compiling: g++ -std=c++17 -O3 -fopenmp -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+  OpenMP not supported, retrying without -fopenmp...
+Compiling: g++ -std=c++17 -O3 -Wall -Wextra -o /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp -lm
+Compiler warnings:
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:20:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_0(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:37:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_1(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:58:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_2(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:79:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_3(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:96:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_4(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:117:59: warning: unused parameter 'params' [-Wunused-parameter]
+inline cx integrand_conv_5(const double* y, const double* params) {
+                                                          ^
+/Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc_generated.cpp:164:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = (argc > 4) ? std::atoi(argv[4]) : 1;
+        ^
+7 warnings generated.
+
+Compilation successful: /Users/aidanh/Desktop/TROPICAL_MONTE_CARLO2/TROPICAL_MONTE_CARLOv2/SANDBOX/INTERFILES/tropical_mc

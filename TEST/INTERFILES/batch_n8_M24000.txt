@@ -1,0 +1,6 @@
+BATCH test: Nkp=7200 coefficient sets, dim=8, 9 sectors, 24000 samples(or maxeval)/sector
+Spec P=c0+sum c_i x_i, B=-6; exact=1/(120 c0^2 prod c_i). Single-threaded.
+------------------------------------------------------------------------------------------------
+1.MC_perkp          wall= 270.563 s   thru=       27 kp/s   relerr med=5.46e-02 mean=7.64e-02 max=4.21e+00
+2.QMC_shared        wall= 376.447 s   thru=       19 kp/s   relerr med=7.25e-02 mean=7.51e-02 max=2.04e-01
+3.QMC_shared_basis  wall= 194.782 s   thru=       37 kp/s   relerr med=7.25e-02 mean=7.51e-02 max=2.04e-01

@@ -1,0 +1,7 @@
+"caseId","tier","config","n","magnitude","alpha","k","kStar","z0","z0Num","seed","value","err","sigmaSample","relErr","sigmaTrue","heavyTail","sigmaTrueConv","convMassFrac","nDivergent","domSigOverMu","gateOK","hasConstAny","minMargin","absMp","nDropped","nSectors","varRedTrue","varRedTrueConv","wallClock","exact","skipReason"
+"CaseA","P0","single","2","     6
+1. 10","{2, 0}","2","2","1000","1000.","42","0.000780319","          -6
+8.91432 10","0.0039866","0.0059727","inf","True","0.00397258","0.997857","1","0.505379","True","True","0.5","1","2","8","0","17.4393","3.96226","True",""
+"CaseA","P0","single","2","     6
+1. 10","{2, 0}","2","2","1000","1000.","101","0.000772781","          -6
+8.63259 10","0.00386061","0.0155745","inf","True","0.00397258","0.997857","1","0.505379","True","True","0.5","1","2","8","0","17.4393","3.96226","True",""

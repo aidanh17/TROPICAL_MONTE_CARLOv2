@@ -1,0 +1,7 @@
+# regenerable artifacts
+bench_*
+sectors_*.hpp
+tmp_*.cpp
+*.log
+gen.log
+# keep the record: results.csv, summary.txt, manifest.csv, *.png

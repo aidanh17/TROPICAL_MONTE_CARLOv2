@@ -1,0 +1,93 @@
+================================================================================
+PHASE 1 (SANDBOX) RESULTS — Gate 1 summary               date: 2026-06-12
+All numbers below are from orchestrator-verified runs (SANDBOX/verify_toy0.txt,
+verify_toy1.txt, verify_toy2.txt, verify_true_sigma.txt), not worker claims.
+================================================================================
+
+-------------------------------------------------------------------------------
+1. EXACTNESS (Gate 1 criterion: rel. err < 1e-3 vs exact/NIntegrate) — ALL PASS
+-------------------------------------------------------------------------------
+TOY0 k=1 PASS relerr=6.664031712523208e-13     (exact 1e-6; §3.6 hand-check OK,
+TOY0 k=2 PASS relerr=2.1175823681357508e-16     EmptyDomain drop verified)
+TOY1 k=2 PASS relerr=0.00007922262879437767    (exact 500000)
+TOY1 k=1 PASS relerr=0.00007922262879437767
+TOY2 PASS relerr=0.000011636450150150167       (vs direct NIntegrate 7.850e-4)
+
+The lifting identity, per-sector delta resolution (§3.2), re-clearing (§3.3),
+domain classification (§3.4) and pivot selection (§3.5) are all CORRECT.
+The §3.6 worked example reproduces sector-by-sector, including the mandatory
+EmptyDomain drop of the constant-root sector (z0 = 1e6 > 1).
+
+-------------------------------------------------------------------------------
+2. SAMPLE-MC SIGMA AT 1e5 SAMPLES/SECTOR (corrected estimator: g = f*indicator,
+   per-sample sigma over ALL draws; total = Sqrt[Sum sigma_i^2])
+-------------------------------------------------------------------------------
+TOY1 (P = 1 + x1 + 1e-6 x2, B = -3, exact = 5e5):
+  Unlifted total sigma:  118550     (UNDERESTIMATE — MC misses the spike mass:
+                                     sample means ~927 vs true sum 5e5)
+  Lifted k=2 sigma:      4.494e6    (ratio unlifted/lifted = 0.026)
+  Lifted k=1 sigma:      4.497e6    (ratio = 0.026)
+TOY2 (P = 1 + 1e6 x1^2 + x2^2 + x1 x2^2, B = -2; Test 6 Case A):
+  Unlifted total sigma:  0.015836
+  Lifted total sigma:    0.0038557  (ratio unlifted/lifted = 4.11 — i.e. ~17x
+                                     variance reduction at these samples)
+
+-------------------------------------------------------------------------------
+3. TRUE PER-SAMPLE SIGMA (exact: sigma^2 = I2 - I1^2 per sector via NIntegrate;
+   the asymptotically honest metric) — verify_true_sigma.txt
+-------------------------------------------------------------------------------
+=== TRUE SIGMA SUMMARY ===
+TOY1 unlifted : INF      (sector 4: I2 divergent; sector 3 finite but 1.1e11)
+TOY1 lifted k=2: INF     (ALL 3 non-empty sectors: I2 divergent)
+TOY1 lifted k=1: INF     (same)
+TOY2 unlifted : 0.0165896
+TOY2 lifted : INF        (sector cone-8 I2 divergent; I1 of that sector is
+                          1.68e-6 = 0.2% of the integral. Excluding it, the
+                          remaining 5 sectors total sigma = 0.00392 — 4.2x
+                          below unlifted)
+I1 sanity sums all PASS (toy1 configs ~499950-499960 vs 5e5; toy2 configs
+0.00078495/0.00078502 vs 7.85e-4).
+
+-------------------------------------------------------------------------------
+4. ROOT CAUSE AND PIVOT DIAGNOSTICS
+-------------------------------------------------------------------------------
+Cause of every divergent I2: §3.3 re-clear loses the constant term
+(HasConstantTerm -> False) -> Qtilde -> 0 at a cube corner -> Qtilde^B with
+B <= -2 makes f^2 non-integrable (f itself remains integrable: exactness holds).
+
+Per-pivot enumeration (verified):
+- TOY1, all non-empty sectors, both k: the z-row is m = (0,k,-1)-derived with
+  exactly ONE admissible pivot (p=3, m_p=1) -> HasConst=False. STRUCTURAL: no
+  pivot choice can preserve the constant term.
+- TOY2 cone 7: pivot p=2 (m_p=2) IS constant-preserving and admissible, but
+  plan §3.5 ranks |m_p|=1 first, so p=3 (HasConst=False) wins. PLAN-LEVEL FIX
+  AVAILABLE: reorder ranking to prefer constant preservation over |m_p|=1.
+  (This sector's I2 converges either way; the fix is hygiene, not the blocker.)
+- TOY2 cone 8: NO admissible pivot preserves the constant term (all three give
+  HasConst=False). STRUCTURAL — this is the sector with divergent I2.
+
+Caveat on TOY1: its lifted Newton polytope is DEGENERATE (3 support points in
+R^3 lie in the plane k*e2 = e3), which the plan did not anticipate
+(§5.3 step 4 assumed PolytopeVertices+ComputeDecomposition would work; Polymake
+cannot produce a complete pointed normal fan for a lower-dimensional polytope).
+The fan used is the principled lineality-completion refinement
+(rays {(1,0,0),(0,1,0),(-1,-1,0),(0,k,-1),(0,-k,1)}, 6 cones), which restores
+exactness; the constant-term loss persists under it and is structural for this
+geometry, not an artifact of the workaround.
+
+-------------------------------------------------------------------------------
+5. GATE 1 VERDICT (plan §5.5)
+-------------------------------------------------------------------------------
+Exactness: PASS.
+Variance criterion ("lifted sigma materially below unlifted on Toys 1 AND 2"):
+FAIL —
+  Toy 1: no improvement (both methods have infinite true variance; lifting
+         relocates the pathology, does not remove it).
+  Toy 2: 4.1x sigma reduction on 99.8% of the integral, but one structurally
+         bad sector makes the asymptotic variance infinite under the §3.4
+         indicator baseline.
+Per plan §5.5 this is a HARD STOP: Phase 2 must not begin. Reported to the
+project owner with mitigation options (pivot-ranking reorder; log-space remap
+of the §3.4 domain constraint, currently out of scope; k-tuning; per-sector
+fallback to unlifted processing for HasConstantTerm=False sectors).
+================================================================================
