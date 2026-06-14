@@ -343,6 +343,8 @@ I = \int_0^\infty dz\; \delta(z - z_0) \int_{[0,\infty)^n} d\mathbf{x}\; [\text{
 \end{equation}
 The $(n{+}1)$-dimensional lifted integrand is decomposed on the tropical fan of the lifted polynomial; in each sector the delta constraint is resolved analytically by solving for a pivot variable (``delta elimination''), reducing the dimension back to $n$. Residual coefficients $c_i = C_i / z_0^{k_i}$ keep the construction exact when several monomials are lifted at once.
 
+\paragraph{Complex coefficients.} The coefficient $C$ being lifted may itself be \emph{complex}: the anchor $z_0 = |C|^{1/k}$ uses the modulus and is therefore real and positive, while the entire phase is carried, exactly, by the residual $c = C/z_0^{k} = e^{i\arg C}$ (unit modulus for the primary rule, $\mathcal{O}(1)$ for the secondaries). The lifting thus splits a small \emph{complex} coefficient cleanly into a real magnitude scale, which moves into the deterministic geometry/prefactor, and an $\mathcal{O}(1)$ complex phase, which rides along on the lifted monomial. Every quantity that must stay real to define the sector --- the effective exponents $a_{\mathrm{eff}}$, the convergence gate, and the delta-root domain indicator --- depends only on the integer Newton-polytope data and the \emph{real} exponents $A_i, B_k$, so it is unaffected; only the polynomial \emph{values} become complex, and the C++ pipeline already carries those as \texttt{std::complex<double>}. The round-trip identity check in \texttt{LiftCoefficients} therefore holds exactly for complex $C$, and the lifted decomposition reproduces the (complex-valued) integral. Worked demonstrations with coefficients of very small magnitude are Examples~24--27 (Section~\ref{sec:complex-coeff-examples}); the boundary case --- complex \emph{exponents} $B_k$, which are \emph{not} liftable --- is contrasted there and below.
+
 \paragraph{Key Functions:}
 \begin{description}
   \item[\texttt{DetectExtremeCoefficients[spec, threshold:1000, opts]}] Scans all polynomial monomials (via \texttt{ParsePolynomial}) and returns a list of associations \texttt{<|"PolyIndex", "ExponentVector", "Coefficient", "Magnitude", "SuggestedK"|>} for every monomial whose numeric coefficient satisfies $|C| < 1/\text{threshold}$ or $|C| > \text{threshold}$. \texttt{SuggestedK} automates the anchor $z_0 = |C|^{1/k}$: the \texttt{"AnchorRule"} option (default \texttt{"kStar"}) returns $k^{*} = \max(1,\lceil|\log|C||/\log\text{threshold}\rceil)$ of Section~\ref{sec:anchor}; \texttt{"Unit"} restores the legacy \texttt{SuggestedK}~$\to 1$, and a function \texttt{f[mag, threshold]} supplies a custom rule. The optional \texttt{"BandEdgeGuard"} (default \texttt{False}) adds $+1$ for coefficients within one decade of the band edge. Symbolic (kinematic) coefficients are skipped, since their magnitude is unknown at lift time.
@@ -356,7 +358,7 @@ The $(n{+}1)$-dimensional lifted integrand is decomposed on the tropical fan of 
   \item[\texttt{EvaluateTropicalMCLifted[spec, kinPoints, opts]}] Convenience driver: detect (or accept) lift rules, lift, build the lifted fan, and call \texttt{EvaluateTropicalMC} with \texttt{"LiftData"} set. Options: \texttt{"LiftRules"} (\texttt{Automatic} or explicit list), \texttt{"Threshold"} (default 1000), \texttt{"AnchorRule"} / \texttt{"BandEdgeGuard"} (passed to \texttt{DetectExtremeCoefficients} when \texttt{"LiftRules" -> Automatic}, so the automatic path lifts at $k^{*}$ rather than $k=1$; Section~\ref{sec:anchor}), \texttt{"FanData"} (\texttt{Automatic} or an explicit lifted fan --- required when the lifted Newton polytope is degenerate, cf.\ \texttt{TropicalEval::liftdegenerate}), plus all \texttt{EvaluateTropicalMC} options. If automatic detection finds no extreme coefficients it falls back to the plain pipeline.
 \end{description}
 
-\paragraph{Caveats.} Lifting requires \emph{real} polynomial exponents $B_j$ (a complex $\tilde{a}$ admits no real-valued domain indicator; \texttt{liftcomplex} fires otherwise). When the lifted Newton polytope is lower-dimensional (few distinct monomials), the automatic fan fails and an explicit \texttt{"FanData"} must be supplied. Sectors with \texttt{HasConstantTerm -> False} may have infinite true variance: the sample-based error bar can then underestimate the true error. See \texttt{SUMMARY.txt} \S8 and \texttt{SANDBOX/benchmark\_results.md} for benchmark tables.
+\paragraph{Caveats.} Lifting requires \emph{real} polynomial exponents $B_j$ --- a complex $\tilde{a}$ admits no real-valued domain indicator, and \texttt{liftcomplex} fires otherwise. (This is a restriction on the \emph{exponents}, not the coefficients: complex \emph{coefficients} $C$ are fully supported, as just described.) Complex coefficients are integrated on the principal branch of $\log Q$, which is the correct, \texttt{NIntegrate}-consistent value as long as no cleared polynomial $Q_k$ winds around the origin on $[0,1]^n$; this is automatic when the dominant constant term keeps $Q_k$ near the positive real axis (e.g.\ a small complex perturbation of a positive polynomial), and is exactly the regime where lifting is wanted. When the lifted Newton polytope is lower-dimensional (few distinct monomials), the automatic fan fails and an explicit \texttt{"FanData"} must be supplied. Sectors with \texttt{HasConstantTerm -> False} may have infinite true variance: the sample-based error bar can then underestimate the true error. See \texttt{SUMMARY.txt} \S8 and \texttt{SANDBOX/benchmark\_results.md} for benchmark tables.
 
 %---
 \subsubsection{Module 2: Divergence Regulation [removed in v2]}
@@ -1790,11 +1792,17 @@ wolframscript -file EXAMPLES/tropical_eval_examples2.wl
 # Examples 21-23 (independent cross-checks: exact Gamma + CUBA)
 wolframscript -file EXAMPLES/tropical_eval_examples3.wl
 
+# Examples 24-27 (lifting with complex, small-magnitude coefficients)
+wolframscript -file EXAMPLES/tropical_eval_examples4.wl
+
 # SeedBase runtime-argv override (re-run one binary under several seeds)
 wolframscript -file EXAMPLES/test_seedbase.wl
 
 # Lifted-pipeline test suite (Test 23)
 wolframscript -file EXAMPLES/test_lifted.wl
+
+# Complex-coefficient lifted test suite (Test 24)
+wolframscript -file EXAMPLES/test_complex_lifted.wl
 
 # CUBA cross-check of ALL test-suite integrals (requires CUBA)
 wolframscript -file EXAMPLES/test_cuba.wl
@@ -1887,6 +1895,29 @@ These examples validate the pipeline against methods that share no code, algorit
 \end{tabular}
 \end{center}
 
+\subsection*{\texttt{tropical\_eval\_examples4.wl} --- Examples 24--27: Lifting with Complex, Small-Magnitude Coefficients}\label{sec:complex-coeff-examples}
+
+Examples~2 and 15--19 made the integrand complex through the \emph{exponents}; Example~20 lifted a small but \emph{real} coefficient. This file combines the two regimes: a polynomial coefficient that is itself \emph{complex} and of very small magnitude, fed through the lifting module. The complex coefficient is split into a real anchor $z_0 = |C|^{1/k}$ and an $\mathcal{O}(1)$ phase residual $c = C/z_0^k$ (Section~\ref{sec:lifting}, ``Complex coefficients''), so the lifted decomposition stays exact and the integral is correctly complex-valued. All four are cross-checked against direct \texttt{NIntegrate} (Example~24 additionally runs the full C++ MC, requiring g++).
+
+\begin{center}
+\begin{tabular}{cl}
+\toprule
+\textbf{Example} & \textbf{Description} \\
+\midrule
+24 & Single small complex coefficient $(1{+}i)10^{-4}$, $k=2$: detection, lift, \\
+   & identity, lifted-decomposition exactness (Re \emph{and} Im), and plain-vs- \\
+   & lifted C++ MC --- plain MC is wildly heavy-tailed, lifted MC tracks the \\
+   & complex reference $\approx 11.63 - 2.58\,i$ in both components \\
+25 & Very small $(1{+}i)10^{-7}$ with the \emph{automatic} anchor: the $k^{*}$ rule \\
+   & grows the anchor exponent to $k=3$ as $|C|$ shrinks; decomposition exact \\
+26 & Two small complex coefficients lifted against one anchor (multi-rule): \\
+   & residual phases stay $\mathcal{O}(1)$; the round-trip is exact for both at once \\
+27 & Purely imaginary coefficient $i\,10^{-4}$ (residual $= i$), plus the boundary \\
+   & case: a complex \emph{exponent} $B = -(2{+}i/2)$ correctly fires \texttt{liftcomplex} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
 \subsection*{Other Example Files}
 
 \begin{description}
@@ -1896,6 +1927,7 @@ These examples validate the pipeline against methods that share no code, algorit
   \item[\texttt{run\_validation\_suite.wl}] --- Runs Examples~1--14 (by loading \texttt{tropical\_eval\_examples.wl}) and then invokes \texttt{RunAllTests[]}, the 6-test validation suite (Section~\ref{sec:sixtest}). The examples file \emph{defines} \texttt{RunAllTests[]} but never calls it, so this runner is the way to exercise the suite from the command line; it exits non-zero if any test fails.
   \item[\texttt{test\_seedbase.wl}] --- Tests the \texttt{SeedBase} runtime-argv override: compiles one binary, then re-runs it under several seeds, asserting determinism (same seed $\Rightarrow$ identical output), that omitting \texttt{argv[5]} equals passing the compile-time default, distinct MC streams across seeds, and each stream within $5\sigma$ of $\pi/8$.
   \item[\texttt{test\_lifted.wl}] --- Test 23: the lifted-integral pipeline (four subtests, see Section~\ref{sec:test23}).
+  \item[\texttt{test\_complex\_lifted.wl}] --- Test 24: lifting with \emph{complex}, small-magnitude coefficients (four subtests, see Section~\ref{sec:test24}). The automated PASS/FAIL companion to Examples~24--27; exits non-zero on any failure.
   \item[\texttt{cuba\_common.wl}] --- Shared CUBA cross-check generator (used by \texttt{tropical\_eval\_examples3.wl} and \texttt{test\_cuba.wl}).
   \item[\texttt{test\_cuba.wl}] --- CUBA cross-check of all test-suite integrals (Section~\ref{sec:cubacheck}).
   \item[\texttt{test\_vegas.wl}] --- MC vs.\ VEGAS parity demonstration: runs each spec through the pipeline with \texttt{Integrator -> "MC"} and \texttt{"VEGAS"} and asserts they return the same value within combined error, with VEGAS 1--3 orders tighter (Section~\ref{sec:vegas}; requires CUBA).
@@ -1928,6 +1960,19 @@ These examples validate the pipeline against methods that share no code, algorit
   \item[23D (EmptyDomain drops):] Toy~0, $P = 1 + 10^6 x_1$, $B = -2$, $k = 1$ ($z_0 = 10^6$). PASS: dropped sectors $> 0$ and relative error $< 0.1\%$.
 \end{description}
 
+\subsection{Test 24: Lifting with Complex, Small-Magnitude Coefficients (\texttt{test\_complex\_lifted.wl})}\label{sec:test24}
+
+The automated PASS/FAIL companion to Examples~24--27 (Section~\ref{sec:complex-coeff-examples}), confirming that the auxiliary-variable module is correct when a polynomial carries a \emph{complex} coefficient of very small magnitude. The script exits non-zero on any failure.
+
+\begin{description}
+  \item[24A (single complex coeff, full C++):] $P = 1 + (1{+}i)10^{-4} x_1^2 + x_2^2 + x_1 x_2^2$, $B = -2$, $k = 2$. PASS gates: \texttt{DetectExtremeCoefficients} flags $|C| = \sqrt{2}\,10^{-4}$ with $k^{*} = 2$; the lift identity holds and the residual has unit modulus; \texttt{ValidateLiftedDecomposition} is exact ($\sim$$10^{-5}$) in both Re and Im; the C++ MC lands within $5\sigma$ in both components; and the generated source emits a \texttt{cx(...)} literal with no broken \texttt{CForm} token.
+  \item[24B (very small, automatic $k^{*}$):] $(1{+}i)10^{-7}$; the \texttt{kStar} rule returns $k = 3$ and the lifted decomposition is exact ($\sim$$10^{-7}$).
+  \item[24C (multi-rule):] two small complex coefficients $(1{+}i)10^{-4}$ and $(1{-}2i)10^{-4}$ lifted against one anchor; residual magnitudes stay $\mathcal{O}(1)$, the round-trip identity holds, and the decomposition is exact ($\sim$$10^{-6}$).
+  \item[24D (boundary):] a complex polynomial \emph{exponent} $B = -(2{+}i/2)$ (real coefficient) must still fire \texttt{liftcomplex} --- complex coefficients are liftable, complex exponents are not.
+\end{description}
+
+Measured at the time of writing: all four parts PASS. Sector sums agree with direct \texttt{NIntegrate} of the complex integrand to $6\times10^{-7}$--$7\times10^{-6}$; the C++ lifted MC for 24A reproduces $11.63 - 2.58\,i$ within its error bars in both components.
+
 \subsection{Independent Cross-Checks: Exact Closed Form and CUBA (Examples 21--23)}\label{sec:cubacheck}
 
 Beyond the \texttt{NIntegrate}-based validation used throughout, \texttt{tropical\_eval\_examples3.wl} (in \texttt{EXAMPLES/}) checks the pipeline against fully independent references (measured values at the time of writing):
@@ -1953,7 +1998,7 @@ These results predate v2. Scripts in \texttt{CC/} that call the removed divergen
 \begin{enumerate}
   \item \textbf{Convergent integrals only.} v2 rejects $\varepsilon$-regulated specifications (\texttt{noregulator}) and divergent sectors (\texttt{divergentinput}). For pole extraction use the original \texttt{TROPICAL\_MONTE\_CARLO} package.
 
-  \item \textbf{Positive real polynomial coefficients.} All polynomial coefficients must be real and positive, ensuring $\log(P_j)$ is real-valued. Complex integrands arise only from the exponents $A_i$ and $B_j$.
+  \item \textbf{Polynomial coefficients.} The default and best-conditioned case is real positive coefficients, for which $\log(P_j)$ is real-valued and the cleared $Q_k \geq c_{\mathrm{dom}} > 0$ estimate of Section~\ref{sec:alg-factoring} holds exactly. \emph{Complex} coefficients are also supported --- both directly (the C++ pipeline carries all polynomial values as \texttt{std::complex<double>}) and through the lifting module, which splits a small complex coefficient into a real anchor $z_0 = |C|^{1/k}$ and an $\mathcal{O}(1)$ phase residual (Sections~\ref{sec:lifting},~\ref{sec:complex-coeff-examples}). The one proviso is the branch of $\log Q_k$: results use the principal branch, which is the correct, \texttt{NIntegrate}-consistent value provided no $Q_k$ winds around $0$ on $[0,1]^n$ (guaranteed when the dominant constant term keeps $Q_k$ near the positive real axis, as for a small complex perturbation of a positive polynomial). Genuinely complex integrands otherwise arise only from the exponents $A_i$ and $B_j$.
 
   \item \textbf{Monte Carlo convergence and heavy tails.} Accuracy scales as $1/\sqrt{N}$. When coefficients span many orders of magnitude, some sectors become heavy-tailed: the MC estimate \emph{and its sample error bar} can both be too small at moderate $N$ (the rare high-magnitude region is never sampled; see Example~20). Use \texttt{CheckFlatteningMagnitude} to locate such sectors and the lifting module to mitigate them.
 

@@ -1502,6 +1502,33 @@ mmaToCInternal[expr_, pm_] := Module[{str},
 ];
 
 (* --------------------------------------------------------------------------
+   Helper: EmitCoeff
+   Convert a (possibly complex) coefficient to a C++ literal string.
+
+   A genuinely complex NUMERIC coefficient (Im != 0) is emitted directly as
+   cx(re, im) from its numeric value.  This is needed because lifting a
+   complex coefficient C carries its phase into a residual c = C/z0^k (e.g.
+   (1+I)/Sqrt[2]); Simplify may leave such residuals in a symbolic form whose
+   head the recursive MmaToC converter does not handle, which would otherwise
+   reach the CForm fallback and print an invalid C++ token (Complex(...), Pi,
+   E, ...).  Emitting the numeric value as cx(re, im) is robust regardless of
+   the symbolic form.
+
+   Real numeric coefficients and symbolic (kinematic) coefficients are routed
+   through mmaToCInternal unchanged, so the real-coefficient code path is
+   byte-for-byte identical to before.
+   -------------------------------------------------------------------------- *)
+
+EmitCoeff[coeff_, paramMap_Association] :=
+  If[NumericQ[coeff] && N[Im[coeff]] != 0,
+    Module[{cn = N[coeff]},
+      "cx(" <> ToString[CForm[Re[cn]]] <> ", " <>
+              ToString[CForm[Im[cn]]] <> ")"
+    ],
+    mmaToCInternal[coeff, paramMap]
+  ];
+
+(* --------------------------------------------------------------------------
    Helper: Generate C++ for one monomial sum (polynomial evaluation)
    -------------------------------------------------------------------------- *)
 
@@ -1516,7 +1543,7 @@ Module[{lines, polyVar},
     Module[{coeff, alphas, coeffStr, expTerms, expStr},
       coeff    = mono[[1]];
       alphas   = mono[[2]];
-      coeffStr = mmaToCInternal[coeff, paramMap];
+      coeffStr = EmitCoeff[coeff, paramMap];
 
       expTerms = Table[
         If[TrueQ[alphas[[i]] == 0],
@@ -1673,7 +1700,7 @@ Module[
       ];
 
       funcCode = funcCode <> "    cx result = " <>
-        mmaToCInternal[prefactor, paramMap] <> ";\n";
+        EmitCoeff[prefactor, paramMap] <> ";\n";
 
       Do[
         funcCode = funcCode <>
