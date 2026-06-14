@@ -467,6 +467,10 @@ Examples and tests (TROPICAL_MONTE_CARLOv2/EXAMPLES/):
                                      independent methods (exact Gamma closed
                                      form + CUBA Vegas/Cuhre on the direct
                                      integrand; CUBA optional dependency)
+  tropical_eval_examples4.wl         Examples 24-27: auxiliary-variable lifting
+                                     with COMPLEX, small-magnitude coefficients
+                                     (magnitude -> real anchor z0, phase ->
+                                     O(1) residual; see §8j)
   cuba_common.wl                     Shared CUBA cross-check generator
                                      (generateCubaSource / runCubaCheck),
                                      used by examples3 and test_cuba.wl
@@ -481,6 +485,10 @@ Examples and tests (TROPICAL_MONTE_CARLOv2/EXAMPLES/):
                                      streams, and each stream within 5 sigma of
                                      Pi/8.  (See §4 GenerateCppMonteCarlo argv.)
   test_lifted.wl                     Test 23: lifted-integral pipeline (§8h)
+  test_complex_lifted.wl             Test 24: lifting with COMPLEX small-
+                                     magnitude coefficients (§8j); automated
+                                     PASS/FAIL companion to Examples 24-27,
+                                     exits nonzero on any failure
   test_cuba.wl                       CUBA cross-check of ALL test-suite
                                      integrals (Tests 1,2,5,6,7 + 23A/23D):
                                      Cuhre on the direct integrand vs sector
@@ -526,7 +534,8 @@ Cross-checks against FIESTA (TROPICAL_MONTE_CARLO/CC/):
 
 6.  EXAMPLES  (EXAMPLES/tropical_eval_examples.wl: 1-14,
                EXAMPLES/tropical_eval_examples2.wl: 15-20,
-               EXAMPLES/tropical_eval_examples3.wl: 21-23)
+               EXAMPLES/tropical_eval_examples3.wl: 21-23,
+               EXAMPLES/tropical_eval_examples4.wl: 24-27)
 ================================================================================
 
 Example 1:  Basic 2D convergent integral
@@ -700,6 +709,48 @@ Example 23: CUBA cross-check with complex exponent + small coefficients
     CUBA Cuhre provides the precise independent reference
     18.4048600938 - 8.4410359515 I (matches NIntegrate to ~1e-7).
 
+Examples 24-27 (EXAMPLES/tropical_eval_examples4.wl) combine two regimes the
+package had not previously exercised together: a polynomial coefficient that is
+itself COMPLEX and of very small magnitude, fed through the lifting module.
+Lifting splits a complex C into a REAL anchor z0 = Abs[C]^(1/k) (magnitude ->
+geometry/prefactor) and an O(1) PHASE residual c = C/z0^k (rides on the lifted
+monomial).  Everything that must stay real to define a sector (effective
+exponents, convergence gate, domain indicator) depends only on the integer
+Newton-polytope data and the real exponents A,B, so it is unaffected; only the
+polynomial VALUES become complex, which the C++ pipeline already carries as
+std::complex<double>.  See §8j.  All four are cross-checked against direct
+NIntegrate of the complex integrand (Example 24 also runs the full C++ MC).
+
+Example 24: a single small complex coefficient, end to end
+    Int dx1 dx2 / (1 + (1+I) 10^-4 x1^2 + x2^2 + x1*x2^2)^2
+    Same Newton polytope as Example 20 but the x1^2 coefficient is complex
+    (|C| = Sqrt[2] 10^-4).  DetectExtremeCoefficients flags it (kStar -> 2);
+    LiftCoefficients puts |C| into z0 and the phase into residual (1+I)/Sqrt[2]
+    (unit modulus), identity exact; ValidateLiftedDecomposition rel err ~ 7e-6
+    in BOTH Re and Im; plain vs lifted C++ MC at 2e5 samples vs reference
+    ~ 11.63 - 2.58 I:
+        plain  MC:   7.79 - 0.37 I  (heavy tail, both parts far off)
+        lifted MC:  11.52 - 2.48 I  (consistent in Re and Im)
+
+Example 25: a VERY small complex coefficient, automatic anchor
+    Int dx1 dx2 / (1 + (1+I) 10^-7 x1^2 + x2^2 + x1*x2^2)^2
+    |C| ~ 1.41e-7, so the kStar rule grows the anchor exponent to k=3 (not 2),
+    z0 = |C|^(1/3) ~ 5.2e-3, residual still unit modulus.  Lifted
+    decomposition exact (rel err ~ 6e-7) -- "magnitudes are very small" regime.
+
+Example 26: several small complex coefficients (multi-rule lift)
+    P = 1 + (1+I)10^-4 x1^2 + x2^2 + (1-2I)10^-4 x1*x2^2, B={-2}
+    Both extreme monomials lifted against ONE shared anchor; each residual
+    c_i = C_i/z0^{k_i} keeps its own O(1) phase, so the round-trip is exact for
+    several lifted monomials at once (rel err ~ 2e-6).
+
+Example 27: purely imaginary coefficient + the complex-exponent boundary
+    Part A: c = I 10^-4 (residual = I, |residual| = 1); decomposition exact
+            (rel err ~ 4e-6).
+    Part B: complex coefficients ARE liftable, complex EXPONENTS are not -- with
+            B = -(2+I/2) the effective exponents go complex and
+            ProcessSectorLifted fires TropicalEval::liftcomplex (as documented).
+
 MC vs VEGAS parity demo (EXAMPLES/test_vegas.wl, requires CUBA): runs the same
 specs through the pipeline BOTH ways (Integrator -> "MC" and "VEGAS") and asserts
 they return the same value within combined error, with VEGAS 1-3 orders tighter.
@@ -804,8 +855,10 @@ dominant monomial.  This mismatch does not affect correctness (the tropical
 factoring is an exact identity) but can increase the per-sample variance.
 
 The "auxiliary-variable lifting" technique replaces a selected extreme
-coefficient C in monomial x^alpha by an auxiliary variable z^k so that
-z0 = C^(1/k) and C = z0^k.  The integral is then:
+coefficient C in monomial x^alpha by an auxiliary variable z^k with anchor
+z0 = Abs[C]^(1/k) (real); for real positive C this is just z0 = C^(1/k) and
+C = z0^k, and for complex C the phase is absorbed into a residual coefficient
+(§8j).  The integral is then:
 
     I = Integral dz delta(z - z0) * Integral[lifted integrand]
 
@@ -826,9 +879,16 @@ DetectExtremeCoefficients[integrandSpec, threshold]
     Returns a list of Associations, each with keys:
         "PolyIndex"       -> which polynomial (1-indexed)
         "ExponentVector"  -> exponent vector of the extreme monomial
-        "Coefficient"     -> the coefficient value
-        "Magnitude"       -> Abs[N[coefficient]]
-        "SuggestedK"      -> suggested lift power (currently always 1)
+        "Coefficient"     -> the coefficient value (may be complex)
+        "Magnitude"       -> Abs[N[coefficient]]  (complex modulus)
+        "SuggestedK"      -> auto-chosen lift power via the anchor rule
+    SuggestedK automates the anchor z0 = Abs[C]^(1/k): the "AnchorRule" option
+    (default "kStar") returns k* = max(1, Ceiling[|log Abs[C]| / log threshold]),
+    the smallest k that pulls z0 back inside the non-extreme band [1/thr, thr];
+    "Unit" restores the legacy SuggestedK -> 1, and a function f[mag, threshold]
+    supplies a custom rule.  The optional "BandEdgeGuard" (default False) adds +1
+    within one decade of the band edge.  Because Magnitude uses Abs[C], the rule
+    works unchanged for COMPLEX coefficients (k scales with |log Abs[C]|).
     Useful for identifying which coefficients to lift.
 
 LiftCoefficients[integrandSpec, liftRules]
@@ -838,11 +898,23 @@ LiftCoefficients[integrandSpec, liftRules]
         "LiftedSpec"      -> new IntegrandSpec with the auxiliary variable z
                             appended to "Variables" (symbol x[n+1])
         "LiftData"        -> Association with keys:
-                               "z0"           -> the anchor value z0 = C^(1/k)
+                               "z0"           -> anchor z0 = Abs[C]^(1/k), real
+                                                 and exact (uses the modulus, so
+                                                 valid for complex C)
                                "AuxIndex"     -> index of the new variable (n+1)
                                "AuxVariable"  -> x[n+1]
                                "Rules"        -> the list of lift rules applied
+                               "Residuals"    -> residual coefficients
+                                                 c_i = C_i / z0^{k_i}.  For a
+                                                 complex C the residual carries
+                                                 the PHASE (c = e^{i arg C} for
+                                                 the primary rule, |c| = 1);
+                                                 keeps the lift exact when
+                                                 several monomials share z0.
                                "OriginalSpec" -> copy of the input spec
+    A round-trip identity check (lifted polynomial at z -> z0 equals the
+    original) fires TropicalEval::liftidentity on failure; it holds exactly for
+    complex C because c_i z0^{k_i} = C_i.
 
 ProcessSectorLifted[liftedSpec, dualVertices, simplex, coneIndex, liftData]
     Extends ProcessSector to the (n+1)-dimensional lifted problem.  After
@@ -950,8 +1022,9 @@ delta(z - z0) factor is resolved as follows.
 --------------------------------------------------------------------------------
 
 TropicalEval::liftidentity
-    Fired when the requested lift rule corresponds to a monomial whose
-    coefficient is already 1 (no lifting needed).
+    Fired by LiftCoefficients when the round-trip identity check fails: the
+    lifted polynomial evaluated at z -> z0 does not reproduce the original.
+    (Holds exactly for real OR complex C, since c_i z0^{k_i} = C_i.)
 
 TropicalEval::liftnopivot
     Fired by ProcessSectorLifted when no admissible pivot can be found:
@@ -959,9 +1032,12 @@ TropicalEval::liftnopivot
     The sector returns $Failed and is skipped.
 
 TropicalEval::liftcomplex
-    Fired when the pivot substitution z0^{1/m_p} would require a complex
-    root of a negative number (e.g. m_p = 2 with z0 < 0).  The sector
-    returns $Failed and is skipped.
+    Fired by ProcessSectorLifted when all candidate pivots produce a complex
+    effective exponent atilde, so no real-valued domain indicator can be
+    emitted.  This happens for complex polynomial EXPONENTS B (atilde inherits
+    Im[B]), NOT for complex coefficients: a complex COEFFICIENT leaves atilde
+    real (it depends only on integer exponents and real A,B) and is fully
+    supported.  The sector returns $Failed and is skipped.  (See §8j.)
 
 TropicalEval::liftdivergent
     Fired when all admissible pivots give Re(atilde_i) <= 0 for some i,
@@ -990,7 +1066,8 @@ LiftCoefficients to build the LiftData structure.  Users can inspect the
 LiftData (returned by LiftCoefficients) to understand:
 
   - Which auxiliary variable was introduced (AuxVariable)
-  - What anchor value z0 = C^(1/k) was used
+  - What anchor value z0 = Abs[C]^(1/k) was used (and, for complex C, the
+    phase residuals c_i = C_i/z0^{k_i})
   - The lifted integrand specification (LiftedSpec)
   - The original specification (OriginalSpec)
 
@@ -1115,3 +1192,64 @@ Case C: P = 1 + 10^8 x1^3*x2 + x2^3, B={-3}
     Root cause: all 6 lifted sectors have HasConstantTerm=False (structural
     limitation of degenerate lifted polytope; see §8f).  MC estimate is 40%
     below NIntegrate.  Sample sigma is unreliable; FAIL is structural.
+
+
+8j.  COMPLEX COEFFICIENTS  (Examples 24-27, Test 24)
+--------------------------------------------------------------------------------
+
+The coefficient C being lifted may itself be COMPLEX (the original package and
+the lifting benchmarks above used only real C).  This is fully supported, and
+exact, because lifting splits C cleanly into a magnitude and a phase:
+
+    z0 = Abs[C]^(1/k)         (REAL, by construction -- uses the modulus)
+    residual c = C / z0^k     (carries the PHASE: c = e^{i arg C}, |c| = 1 for
+                               the primary rule; O(1) for the secondaries)
+
+so the lifted monomial is c * z^k * x^alpha with an O(1) complex coefficient c,
+and c * z0^k = C makes the round-trip identity (checked by LiftCoefficients)
+exact.  The KEY POINT is that everything which must stay real to define the
+sector geometry is untouched:
+
+  - the Newton polytope, fan, ray matrices and |det M| are integer data;
+  - the effective exponents a_eff = rawA + sum_k B_k d_k, the post-delta atilde,
+    the convergence gate Re(a_eff) > 0, and the domain indicator coefficients
+    all depend only on those integers and the REAL exponents A_i, B_k -- never
+    on the coefficient values;
+  - only the polynomial VALUES Q_k(y) become complex, and the whole C++ pipeline
+    already carries those as std::complex<double> (log-exp evaluation, complex
+    prefactor/result).  GenerateCppMonteCarlo emits a complex numeric coefficient
+    robustly as cx(re, im) (helper EmitCoeff); the real-coefficient codegen is
+    byte-for-byte unchanged.
+
+The lift therefore moves the (small) MAGNITUDE into the deterministic geometry /
+prefactor exactly as in the real case, while the O(1) phase rides along in the
+sampled integrand without inflating variance.
+
+Contrast -- complex EXPONENTS are NOT liftable.  A complex polynomial exponent
+B_k makes atilde complex, which admits no real-valued domain indicator, so
+ProcessSectorLifted fires TropicalEval::liftcomplex (§8d).  Complex
+COEFFICIENTS: supported.  Complex EXPONENTS: not (use the unlifted pipeline,
+cf. Example 23).
+
+Branch-cut proviso.  Complex Q_k are integrated on the principal branch of
+log Q_k, which is the correct, NIntegrate-consistent value as long as no Q_k
+winds around 0 on [0,1]^n -- automatic when the dominant constant term keeps
+Q_k near the positive real axis (e.g. a small complex perturbation of a positive
+polynomial), exactly the regime where lifting is wanted.
+
+Test 24 (EXAMPLES/test_complex_lifted.wl) -- automated PASS/FAIL companion to
+Examples 24-27; exits nonzero on any failure:
+
+    RunTestCxA: single small complex coeff (1+I)10^-4, k=2.  Gates: detection
+        flags |C|=Sqrt[2]10^-4 with k*=2; identity holds and |residual|=1;
+        ValidateLiftedDecomposition exact (~7e-6) in Re AND Im; C++ MC within
+        5 sigma in both parts; generated source has a cx(...) literal and no
+        broken CForm token (Complex(...)).
+    RunTestCxB: very small (1+I)10^-7, automatic anchor -> k*=3; exact (~6e-7).
+    RunTestCxC: two small complex coeffs lifted against one anchor (multi-rule);
+        residual magnitudes O(1); identity holds; exact (~2e-6).
+    RunTestCxD: complex EXPONENT B=-(2+I/2) must fire liftcomplex (boundary).
+
+Measured at the time of writing: all four parts PASS; sector sums agree with
+direct NIntegrate of the complex integrand to 6e-7 - 7e-6, and the 24A lifted
+C++ MC reproduces 11.63 - 2.58 I within its error bars in both components.
