@@ -355,7 +355,7 @@ The $(n{+}1)$-dimensional lifted integrand is decomposed on the tropical fan of 
   \end{equation}
   re-clears the resulting polynomial, and returns an $n$-dimensional \texttt{SectorData} augmented with \texttt{DomainConstraint} (the region of $[0,1]^n$ where the pivot value lies in $(0,1]$), \texttt{PivotIndex}, \texttt{ZRow}, \texttt{AugmentedA}, and \texttt{HasConstantTerm}. Sectors whose delta root lies entirely outside the unit cube return \texttt{<|"EmptyDomain"->True|>} and contribute zero. Pivot ranking: (1) prefer pivots that preserve a constant term after re-clearing, (2) prefer $|m_p| = 1$, (3) maximize the worst integrability margin $\min_i \mathrm{Re}\,\tilde{a}_i$. Error paths: \texttt{liftnopivot}, \texttt{liftcomplex}, \texttt{liftdivergent}.
   \item[\texttt{ValidateLiftedDecomposition[origSpec, liftedSpec, liftedFan, liftData, kin, pg]}] Cross-checks the lifted sector sum (per-sector \texttt{NIntegrate} over the constrained unit cube) against direct \texttt{NIntegrate} of the \emph{original} integrand. Returns \texttt{DirectResult}, \texttt{SectorSum}, \texttt{RelativeError}, \texttt{SectorResults}, and \texttt{DroppedSectors}.
-  \item[\texttt{EvaluateTropicalMCLifted[spec, kinPoints, opts]}] Convenience driver: detect (or accept) lift rules, lift, build the lifted fan, and call \texttt{EvaluateTropicalMC} with \texttt{"LiftData"} set. Options: \texttt{"LiftRules"} (\texttt{Automatic} or explicit list), \texttt{"Threshold"} (default 1000), \texttt{"AnchorRule"} / \texttt{"BandEdgeGuard"} (passed to \texttt{DetectExtremeCoefficients} when \texttt{"LiftRules" -> Automatic}, so the automatic path lifts at $k^{*}$ rather than $k=1$; Section~\ref{sec:anchor}), \texttt{"FanData"} (\texttt{Automatic} or an explicit lifted fan --- required when the lifted Newton polytope is degenerate, cf.\ \texttt{TropicalEval::liftdegenerate}), plus all \texttt{EvaluateTropicalMC} options. If automatic detection finds no extreme coefficients it falls back to the plain pipeline.
+  \item[\texttt{EvaluateTropicalMCLifted[spec, kinPoints, opts]}] Convenience driver: detect (or accept) lift rules, lift, build the lifted fan, and call \texttt{EvaluateTropicalMC} with \texttt{"LiftData"} set. Options: \texttt{"LiftRules"} (\texttt{Automatic} or explicit list), \texttt{"Threshold"} (default 1000), \texttt{"AnchorRule"} / \texttt{"BandEdgeGuard"} (passed to \texttt{DetectExtremeCoefficients} when \texttt{"LiftRules" -> Automatic}, so the automatic path lifts at $k^{*}$ rather than $k=1$; Section~\ref{sec:anchor}), \texttt{"FanData"} (\texttt{Automatic} or an explicit lifted fan; the automatic path is now scale-robust --- it retries the normal-fan computation on a scaled copy of the polytope, which is required for ambient dimension $\ge4$ where thin lattice simplices otherwise make the raw call fail --- so an explicit fan is needed only when the lifted polytope is genuinely lower-dimensional, cf.\ \texttt{TropicalEval::liftdegenerate}), plus all \texttt{EvaluateTropicalMC} options. If automatic detection finds no extreme coefficients it falls back to the plain pipeline.
 \end{description}
 
 \paragraph{Caveats.} Lifting requires \emph{real} polynomial exponents $B_j$ --- a complex $\tilde{a}$ admits no real-valued domain indicator, and \texttt{liftcomplex} fires otherwise. (This is a restriction on the \emph{exponents}, not the coefficients: complex \emph{coefficients} $C$ are fully supported, as just described.) Complex coefficients are integrated on the principal branch of $\log Q$, which is the correct, \texttt{NIntegrate}-consistent value as long as no cleared polynomial $Q_k$ winds around the origin on $[0,1]^n$; this is automatic when the dominant constant term keeps $Q_k$ near the positive real axis (e.g.\ a small complex perturbation of a positive polynomial), and is exactly the regime where lifting is wanted. When the lifted Newton polytope is lower-dimensional (few distinct monomials), the automatic fan fails and an explicit \texttt{"FanData"} must be supplied. Sectors with \texttt{HasConstantTerm -> False} may have infinite true variance: the sample-based error bar can then underestimate the true error. See \texttt{SUMMARY.txt} \S8 and \texttt{SANDBOX/benchmark\_results.md} for benchmark tables.
@@ -885,7 +885,8 @@ through) \texttt{EvaluateTropicalMCLifted}. Tuning options (used only for
 \texttt{"VEGAS"}): \texttt{"VegasEpsRel"} (\texttt{Automatic} $\Rightarrow
 10^{-\text{PrecisionGoal}}$, clamped to $[10^{-12},10^{-2}]$),
 \texttt{"VegasSeed"} ($0\Rightarrow$ Sobol\', recommended),
-\texttt{"VegasNStart"}, \texttt{"VegasNIncrease"}, \texttt{"VegasNBatch"},
+\texttt{"VegasNStart"}, \texttt{"VegasNIncrease"}, \texttt{"VegasNBatch"}
+(all \texttt{Automatic} by default; see the dimension note below),
 \texttt{"VegasMinEval"}. The runtime \texttt{n\_samples} argument is reused
 verbatim as Vegas's \texttt{maxeval} \emph{per sector}. The complex integrand is
 first-class: each Vegas call uses \texttt{ncomp}${}=2$ (component $0={}$Re,
@@ -898,6 +899,25 @@ absent the driver issues \texttt{TropicalEval::nocuba} and returns
 \texttt{\$Failed} --- it never silently falls back to MC. With the default
 \texttt{"MC"} the generated source, compile flags, and results are
 byte-identical to the pre-VEGAS pipeline (regression-gated).
+
+\paragraph{Grid sizing in high dimension (important).} The per-iteration grid
+budget (\texttt{VegasNStart}, growing by \texttt{VegasNIncrease}) must populate
+Vegas's adaptive stratification in $\dim$ dimensions. The historical fixed
+defaults ($1000/500/1000$) are tuned for $n\lesssim4$ and are \emph{far} too
+small for $n\gtrsim6$: Vegas then locks onto a coarse, wrong stratification and
+returns a \textbf{confidently wrong value with a deceptively tight error bar}
+(measured: $\sim$1\% off on an $n=8$ continuous integrand, $\sim$45\% off on its
+lifted counterpart). The three sizing options therefore now default to
+\texttt{Automatic}: \texttt{EvaluateTropicalMC} resolves them from the maximum
+sector dimension $d$ --- the historical values for $d\le4$ (so low-dimensional
+results are unchanged) and $\sim 1000\cdot3^{\,d-4}$ for $d\ge5$ (e.g.\
+$\texttt{NStart}\approx 8\times10^{4}$ at $d=8$). Because \texttt{maxeval}
+(\texttt{NSamples}) must still allow several refinement iterations \emph{on top
+of} the larger grid, the driver emits \texttt{TropicalEval::vegasbudget} when
+\texttt{NSamples} $< 20\cdot\texttt{NStart}$; for $n=8$ a budget of a few
+$\times10^{6}$ per sector reproduces the reference to $\lesssim0.1\%$. Explicit
+integer values are always honored. As always in this regime, \emph{cross-check
+against a reference rather than trusting the quoted error bar}.
 
 \emph{Determinism and threads.} With \texttt{VegasSeed}${}=0$ each Vegas call
 uses Sobol\' points, so every kinematic point is deterministic and its result is
@@ -943,6 +963,11 @@ cutoff bias dominates for VEGAS and MC edges it. In either regime, cross-check
 against a reference rather than trusting the quoted error bar. On the standard
 \emph{continuous} (unlifted) sectors there is no discontinuity and VEGAS is
 unconditionally $1$--$3$ orders tighter (cases V1--V4).
+\texttt{EXAMPLES/test\_complex\_lifted\_vegas\_hd.wl} (Test~26) carries the whole
+construction to $n=8$ with a \emph{tiny complex} coefficient: it evaluates the
+same integral with and without lifting under VEGAS, checks both against an exact
+factorized reference, and confirms the lifted and unlifted values agree --- the
+high-dimensional, complex-coefficient stress test for this combination.
 
 \paragraph{Batched kinematic scans (lever, not yet shipped).} For a scan over
 many kinematic points sharing one polynomial \emph{structure}, the report's
@@ -1065,9 +1090,11 @@ $\tilde{a}$). \texttt{liftcomplex}: candidate pivots produce complex
 $\tilde{a}$ --- no real-valued domain indicator exists; lifting requires real
 polynomial exponents $B_k$. \texttt{liftdivergent}: safety guard if the
 selected pivot's flattening still reports divergence.
-\texttt{liftdegenerate}: the lifted Newton polytope is lower-dimensional, so
-the automatic fan construction fails --- supply an explicit
-\texttt{"FanData"}. \texttt{liftfandim}: the fan handed to the driver in
+\texttt{liftdegenerate}: the lifted Newton polytope is genuinely
+lower-dimensional, so no complete simplicial $(n{+}1)$-fan exists --- supply an
+explicit \texttt{"FanData"}. (The automatic path is scale-robust and no longer
+fails merely because the ambient dimension is $\ge4$; it only reaches this
+message for a truly degenerate polytope.) \texttt{liftfandim}: the fan handed to the driver in
 lifted mode is not $(n{+}1)$-dimensional.
 
 \subsection{Worked Example: Why Lifting Works (Toy 0 in 1D)}\label{sec:lift-example}
@@ -1206,6 +1233,114 @@ $\sim\!13\times$ here. For a non-degenerate Newton polytope the effect is
 cleaner: the full-dimensional benchmark $P = 1 + 10^6 x_1^2 + x_2^2 + x_1 x_2^2$
 (Test~23B, $k=2$) reaches a $17.9\times$ variance reduction with an
 automatically-built fan (see \texttt{SANDBOX/benchmark\_results.md}).
+
+\subsection{Worked Example, step by step: a \emph{small} coefficient becomes an \texorpdfstring{$O(1)$}{O(1)} flattened integrand}\label{sec:lift-example-small}
+
+The example above used a \emph{large} coefficient; the small-coefficient case is
+the mirror image, and is worth doing explicitly because it is the regime the lift
+is most often wanted in (tiny coefficients, e.g.\ a perturbation of a positive
+polynomial). Take the smallest such integral,
+\begin{equation}\label{eq:toy0-small}
+I \;=\; \int_0^\infty \frac{dx}{(1+\varepsilon\,x)^2} \;=\; \frac{1}{\varepsilon},
+\qquad \varepsilon = 10^{-6},\quad A=(0),\quad P=1+\varepsilon x,\quad B=(-2),
+\end{equation}
+so $I = 10^{6}$. The goal is to watch the flattened integrand the Monte Carlo
+actually samples, and to see that \emph{after lifting it is $O(1)$ once the
+coefficients are accounted for}, with the entire $10^{6}$ scale moved out into a
+deterministic prefactor. Every number below is the package output.
+
+\paragraph{Step 1 --- without lifting, the dominant flattened integrand is not $O(1)$.}
+The Newton polytope is again the segment $[0,1]$, two sectors $\rho_\pm$. Now the
+mass sits in $\rho_+$ (the region $x\in[1,\infty)$), because $(1+\varepsilon x)^{-2}$
+stays $\approx 1$ all the way out to $x\sim 1/\varepsilon = 10^{6}$ before it
+decays. In that sector $M=(-1)$, $x = 1/y$, and
+\begin{equation}
+P = 1 + \tfrac{\varepsilon}{y} = y^{-1}\,(\,\underbrace{y+\varepsilon}_{Q}\,),
+\qquad d=-1,\quad a_{\mathrm{eff}} = -1 + (-2)(-1) = 1,
+\end{equation}
+so the cleared polynomial is $Q = y+\varepsilon$ --- its \emph{constant term is the
+tiny} $\varepsilon=10^{-6}$. Flattening is trivial ($a_{\mathrm{eff}}=1$), and the
+sampled function is
+\begin{equation}\label{eq:lift-bad-small}
+f_+(y') \;=\; (y'+\varepsilon)^{-2},\qquad y'\sim\mathrm{Uniform}[0,1].
+\end{equation}
+This swings from $f_+(0)=\varepsilon^{-2}=10^{12}$ down to $f_+(1)\approx 1$: it is
+$O(1)$ only on the strip $y'\lesssim\varepsilon$ that carries the entire integral
+$\int_0^1 f_+ = 10^{6}$, and uniform sampling almost never lands there. The
+measured per-sample spread is $\sigma/\mu \approx 577$. The culprit is exactly the
+$\varepsilon$ sitting on the constant term of $Q$.
+
+\paragraph{Step 2 --- lift the small coefficient into the geometry.}
+Replace $\varepsilon\,x \to z\,x$ with anchor $z_0 = |\varepsilon|^{1/k}$. Taking
+$k=1$ gives $z_0 = \varepsilon = 10^{-6}$ and
+\begin{equation}
+P_{\mathrm{lift}}(x,z) \;=\; 1 + z\,x \quad(\text{coefficient now } 1=O(1)),
+\qquad I=\int_0^\infty\! dz\,\delta(z-z_0)\!\int_0^\infty\! dx\,(1+zx)^{-2}.
+\end{equation}
+This is the \emph{same} lifted polynomial as the large-coefficient Toy~0; only the
+anchor differs ($z_0=10^{-6}$ here vs.\ $10^{6}$ there). The lifted polytope is
+degenerate, so the same explicit 7-ray fan is used.
+
+\paragraph{Step 3 --- delta-eliminate and flatten the dominant cone.}
+Take the dominant survivor, the cone with rays $\rho_1=(1,-1),\ \rho_2=(1,0)$, so
+\begin{equation}
+M=-\bigl[\rho_1\ \rho_2\bigr]^{\!\top}=\begin{pmatrix}-1&-1\\[1pt]1&0\end{pmatrix},
+\qquad x=y_1^{-1}y_2^{-1},\quad z=y_1 .
+\end{equation}
+Then $P_{\mathrm{lift}} = 1 + z\,x = 1 + y_2^{-1} = y_2^{-1}(1+y_2)$, so the cleared
+polynomial is $Q = 1+y_2$ --- \textbf{constant term $1$, $O(1)$}, the small
+$\varepsilon$ is gone from the polynomial. The $z$-row of $M$ is $m=(1,0)$; the
+only pivot is $p=1$, and the delta constraint $z=\prod_j y_j^{m_j}=y_1 = z_0$ has
+the \emph{constant} root
+\begin{equation}
+y_1^{*} \;=\; z_0^{1/m_1} \;=\; z_0 \;=\; 10^{-6}\in(0,1],
+\end{equation}
+so the cone is feasible on the whole cube (no indicator). Eliminating $y_1$ (which
+$Q$ does not contain) leaves the one-variable cleared polynomial
+$\tilde Q = 1+y_2$, effective exponent $\tilde a = 1$, and prefactor base
+\begin{equation}
+\frac{|\det M|}{|m_p|}\;z_0^{\,a_p/m_p-1}
+\;=\; 1\cdot z_0^{\,0/1-1}\;=\;z_0^{-1}\;=\;10^{6}.
+\end{equation}
+Flattening is trivial ($\tilde a=1$, $y_2\to y'$), so the function the Monte Carlo
+samples in this cone is
+\begin{equation}\label{eq:lift-good-small}
+\boxed{\,f_\star(y') \;=\; z_0^{-1}\,(1+y')^{-2} \;=\; 10^{6}\,(1+y')^{-2}\,}\qquad
+y'\sim\mathrm{Uniform}[0,1].
+\end{equation}
+
+\paragraph{Step 4 --- read off the $O(1)$ structure.}
+Compare \eqref{eq:lift-good-small} with the unlifted \eqref{eq:lift-bad-small}.
+The random part is $(1+y')^{-2}$, which lives in $[\tfrac14,1]$ --- genuinely
+$O(1)$, with measured $\sigma/\mu \approx 0.41$ (down from $577$, a
+$\sim\!1400\times$ drop in per-sample spread). Every coefficient \emph{inside} the
+sampled polynomial $\tilde Q = 1+y'$ is $O(1)$; the whole extreme scale
+$1/\varepsilon = 10^{6}$ has been carried, exactly, into the deterministic
+prefactor $z_0^{-1}$. That is the precise sense in which ``the flattened integrand
+is $O(1)$ once the coefficients are accounted for'': the lift rebalances the
+polynomial so the part that is sampled is flat and the part that is extreme is
+known in closed form. The full per-cone breakdown (package output) is
+
+\begin{center}\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{clccll}
+\toprule
+Cone & rays & pivot & prefactor & sampled $f(y')$ & $\sigma/\mu$ \\
+\midrule
+4 & $(-1,0),(-1,-1)$ & 2 & $10^{-6}$ & $10^{-6}(1+10^{-12}y')^{-2}$ & $\approx 0$ \\
+5 & $(-1,-1),(0,-1)$ & 1 & $10^{-6}$ & $10^{-6}(y'+10^{-12})^{-2}$ (constrained) & heavy \\
+6 & $(0,-1),(1,-1)$  & 1 & $1$       & $(y'+10^{-6})^{-2}$ (constrained)        & $\approx 577$ \\
+7 & $(1,-1),(1,0)$   & 1 & $10^{6}$  & $10^{6}(1+y')^{-2}$ \eqref{eq:lift-good-small} & $\approx 0.41$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+(cones $1$--$3$ are dropped as \texttt{EmptyDomain}). Cone~7 is the flat,
+$O(1)$ piece; as in the large case, the degenerate 1D fan still leaves part of the
+mass in domain-constrained, heavy-tailed cones (5,6), which is why a degenerate
+polytope caps the gain. A \emph{non-degenerate} lift removes even those: in the
+8-dimensional, tiny complex-coefficient Test~26 every lifted sector keeps an
+$O(1)$ constant term (\texttt{HasConstantTerm} all \texttt{True}), and lifted
+VEGAS reaches $\sim\!0.1\%$.
 
 \subsection{Choosing the Lift Anchor \texorpdfstring{$z_0$}{z0} (the integer \texorpdfstring{$k$}{k})}\label{sec:anchor}
 

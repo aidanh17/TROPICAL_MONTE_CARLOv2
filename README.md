@@ -123,6 +123,8 @@ Run any of these with `wolframscript -file EXAMPLES/<file>` from the repo root.
 | `tropical_eval_examples4.wl` | **Examples 24–27: lifting with complex, small-magnitude coefficients** |
 | `test_lifted.wl` | Test 23: lifted-integral pipeline (exactness, end-to-end C++, error paths, `EmptyDomain`) |
 | `test_complex_lifted.wl` | **Test 24: lifting with complex coefficients (PASS/FAIL; exits non-zero on failure)** |
+| `test_complex_lifted_hd.wl` | Test 25: higher-dimensional lifting (3–4 vars) with complex coefficients |
+| `test_complex_lifted_vegas_hd.wl` | **Test 26: an 8-D integral with a tiny complex coefficient under VEGAS, with and without lifting, vs an exact reference (requires CUBA)** |
 | `test_cuba.wl` | CUBA Cuhre cross-check of every convergent suite integral (requires CUBA) |
 | `test_vegas.wl` | MC ↔ VEGAS parity demonstration (requires CUBA) |
 | `test_quick.wl`, `test_cpp.wl`, `test_seedbase.wl` | smoke / codegen / RNG-seed tests |

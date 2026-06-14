@@ -133,10 +133,14 @@ integrator: \"VEGAS\" routes the flattened sectors through CUBA-Vegas \
 (requires CUBA; if not found, EvaluateTropicalMC issues TropicalEval::nocuba \
 and returns $Failed -- there is no silent fallback to MC).  VEGAS tuning: \
 \"VegasEpsRel\" -> Automatic (= 10^-PrecisionGoal, clamped to [1e-12, 1e-2]) | \
-number, \"VegasSeed\", \"VegasNStart\", \"VegasNIncrease\", \"VegasNBatch\", \
-\"VegasMinEval\" (see GenerateCppMonteCarlo).  With Integrator -> \"MC\" the \
-generated source, compile flags, and results are byte-identical to the \
-pre-VEGAS pipeline.";
+number, \"VegasSeed\", \"VegasNStart\", \"VegasNIncrease\", \"VegasNBatch\" \
+(all Automatic by default -- resolved from the max sector dimension d: the \
+historical 1000/500/1000 for d<=4, scaled up ~1000*3^(d-4) for d>=5 so that \
+high-dimensional VEGAS does not silently converge to a wrong value on a too-coarse \
+grid; explicit integers are honored), \"VegasMinEval\".  In high dimension also \
+raise \"NSamples\" (Vegas maxeval/sector) accordingly, or TropicalEval::vegasbudget \
+warns.  With Integrator -> \"MC\" the generated source, compile flags, and results \
+are byte-identical to the pre-VEGAS pipeline.";
 
 EvaluateTropicalMCLifted::usage =
   "EvaluateTropicalMCLifted[integrandSpec, kinematicPoints, opts] is a \
@@ -181,11 +185,18 @@ TropicalEval::nodivergent = "GenerateCppMonteCarlo: divergent sectors passed; no
 TropicalEval::liftidentity = "LiftCoefficients: round-trip identity check FAILED for polynomial `1`; lifted poly at z->z0 does not match original.";
 TropicalEval::liftnopivot = "ProcessSectorLifted: cone `1` — no admissible pivot found.  z-row m=`2`, per-pivot atilde=`3`.  Try a different k in the lift rules; alternatively, the domain constraint may cut off all divergent regions (log-space remap, future work).";
 TropicalEval::liftcomplex = "ProcessSectorLifted: cone `1` — all candidate pivots produce complex atilde; cannot emit a real-valued domain indicator.  Lift with a different k or check that polynomial exponents B are real.";
+TropicalEval::liftcomplexexponents =
+  "EvaluateTropicalMCLifted: `1` of `2` polynomial exponents (B_k / \[Gamma]_k) are \
+complex.  The current lifting algorithm requires real exponents to construct a \
+real-valued domain indicator.  Options: (a) use \"ComplexExponentMode\"->\"SplitRealImag\" \
+to fold imaginary parts into an oscillatory phase weight; \
+(b) condition the exponent representation before lifting.";
 TropicalEval::liftdivergent = "ProcessSectorLifted: cone `1` — atilde `2` has a non-positive component after delta resolution; the lifted sector is divergent.  TROPICAL_MONTE_CARLOv2 supports convergent integrals only.";
 TropicalEval::liftfandim = "EvaluateTropicalMC with LiftData: the fan dimension is `1` (Length[dualVertices[[1]]]) but n+1 = `2` is required (n = Length[liftData[\"OriginalSpec\"][\"Variables\"]]).  Supply the (n+1)-dimensional lifted fan.";
 TropicalEval::liftdegenerate = "EvaluateTropicalMCLifted: the lifted Newton polytope is lower-dimensional; automatic fan construction is not possible — supply an explicit complete simplicial fan via the \"FanData\" option.";
 TropicalEval::nocuba = "Integrator -> \"VEGAS\" requires the CUBA library (cuba.h + libcuba). Not found under /opt/homebrew, /usr/local, or /usr. Install via `brew install cuba` or https://feynarts.de/cuba/, or use Integrator -> \"MC\".";
 TropicalEval::badintegrator = "Unknown Integrator `1`; expected \"MC\" or \"VEGAS\".";
+TropicalEval::vegasbudget = "Integrator -> \"VEGAS\" in dimension `1`: the maxeval budget NSamples = `2` is small relative to the (dimension-aware) per-iteration grid VegasNStart = `3`.  VEGAS may stop before its grid has adapted and return a confidently wrong value with a deceptively tight error bar.  Increase \"NSamples\" to at least ~`4`, or set \"VegasNStart\" explicitly.";
 
 (* ============================================================================
    PRIVATE IMPLEMENTATION
@@ -449,7 +460,17 @@ Module[
     "DivergentVariable"    -> 0,
     "Dimension"            -> n,
     "PolynomialExponents"  -> polyExps,
-    "MonomialExponents"    -> monoExps
+    "MonomialExponents"    -> monoExps,
+    (* Per-polynomial log of the tropical monomial factor y^{d_k} that was
+       cleared out of P_k, expressed in the FLATTENED sample coords y'
+       (y_j = y'_j^{1/a_eff,j} => log y_j = log_y'[j]/a_eff,j).  Needed by the
+       SplitRealImag oscillatory phase exp(i Im(B_k) log|P_k|), since
+       log|P_k| = Const_k + sum_i Coeffs_{k,i} log_y'[i] + log|Q_k|, and the
+       cleared-polynomial value the integrand evaluates is only |Q_k|. *)
+    "MonoFactorLog"        -> Table[
+      <|"Const" -> 0,
+        "Coeffs" -> Table[minExponents[[k, i]]/effectiveAVals[[i]], {i, n}]|>,
+      {k, Length[minExponents]}]
   |>;
 
   If[verbose,
@@ -807,28 +828,36 @@ Module[
   |>;
 
   (* ---- Identity check: liftedPolys /. auxVar -> z0 === originalPolys ---- *)
+  (* Coefficient-wise relative magnitude check avoids false positives when z0 is
+     a machine float (e.g. from a real extreme coefficient): Simplify cannot
+     reduce the O(eps_mach) residuals to the symbol 0, but they are harmless. *)
   Do[
     liftedSubbed = Expand[liftedPolys[[j]] /. auxVar -> z0];
     original     = Expand[polys[[j]]];
     If[!TrueQ[liftedSubbed === original],
-      (* Allow numeric equality as fallback *)
-      If[!TrueQ[Simplify[liftedSubbed - original] === 0],
-        Message[TropicalEval::liftidentity, j];
-        Print["  liftedSubbed = ", liftedSubbed];
-        Print["  original     = ", original];
-        (* Do not abort — residuals allow exact cancellation; try to continue *)
+      Module[{parsedDiff, scaleOrig, maxResid},
+        parsedDiff = ParsePolynomial[Expand[liftedSubbed - original], vars];
+        scaleOrig  = Max[1., Max[Abs[N[#[[1]]]] & /@ ParsePolynomial[Expand[original], vars]]];
+        maxResid   = Max[Abs[N[#[[1]]]] & /@ parsedDiff];
+        If[NumericQ[maxResid] && maxResid > 1*^-8 * scaleOrig,
+          Message[TropicalEval::liftidentity, j];
+          Print["  liftedSubbed = ", liftedSubbed];
+          Print["  original     = ", original];
+          (* Do not abort — residuals allow exact cancellation; try to continue *)
+        ]
       ]
     ],
     {j, Length[polys]}
   ];
 
   liftData = <|
-    "z0"          -> z0,
-    "AuxVariable" -> auxVar,
-    "AuxIndex"    -> auxIdx,
-    "Rules"       -> liftRules,
-    "Residuals"   -> residuals,
-    "OriginalSpec"-> integrandSpec
+    "z0"           -> z0,
+    "AuxVariable"  -> auxVar,
+    "AuxIndex"     -> auxIdx,
+    "Rules"        -> liftRules,
+    "Residuals"    -> residuals,
+    "OriginalSpec" -> integrandSpec,
+    "ImagExponents"-> Lookup[integrandSpec, "ImagExponents", None]
   |>;
 
   <|"LiftedSpec" -> liftedSpec, "LiftData" -> liftData|>
@@ -1106,7 +1135,26 @@ Module[
     "PivotIndex"          -> pivotP,
     "ZRow"                -> mVec,
     "AugmentedA"          -> a,
-    "HasConstantTerm"     -> bestPivot["hasConst"]
+    "HasConstantTerm"     -> bestPivot["hasConst"],
+    (* Log of the tropical monomial factor cleared out of each P_k, in the
+       flattened sample coords, for the SplitRealImag oscillatory phase (see
+       ProcessSector).  In the lifted sector the factor comes from BOTH the
+       augmented clearing y^{d^aug_k} and the pivot substitution
+       y_p = z0^{1/m_p} prod_{j!=p} y_j^{-m_j/m_p}:
+         log|P_k| = (d^aug_{k,p}/m_p) log z0
+                  + sum_j [ (d^aug_{k,j} - d^aug_{k,p} m_j/m_p) + rcMin_{k,j} ] / atilde_j * log_y'[j]
+                  + log|Q_k| .                                                    *)
+    "MonoFactorLog"       -> With[
+      {dAug = sdAug["MinExponents"], rIdx = bestPivot["remainIdx"],
+       rcM = bestPivot["rcMin"], logZ0v = Log[z0]},
+      Table[
+        <|"Const" -> (dAug[[k, pivotP]]/mp) logZ0v,
+          "Coeffs" -> Table[
+            ((dAug[[k, rIdx[[jj]]]] - dAug[[k, pivotP]] mVec[[rIdx[[jj]]]]/mp)
+              + rcM[[k, jj]]) / atildeVals[[jj]],
+            {jj, n}]|>,
+        {k, Length[dAug]}]
+    ]
   |>
 ];
 
@@ -1587,7 +1635,8 @@ Options[GenerateCppMonteCarlo] = {
   "VegasNStart"    -> 1000,
   "VegasNIncrease" -> 500,
   "VegasNBatch"    -> 1000,
-  "VegasMinEval"   -> 0
+  "VegasMinEval"   -> 0,
+  "ImagExponents"  -> None          (* list of Im[B_k] for oscillatory phase, or None *)
 };
 
 GenerateCppMonteCarlo[convergentSectors_List, divergentSectors_List,
@@ -1599,7 +1648,8 @@ Module[
    nConvergent,
    maxDim, seedBase, nSamples,
    integrator, isVegas, vegasEpsRel, vegasEpsRelStr,
-   vegasSeed, vegasNStart, vegasNIncrease, vegasNBatch, vegasMinEval},
+   vegasSeed, vegasNStart, vegasNIncrease, vegasNBatch, vegasMinEval,
+   imagExpsOpt, hasImagPhase},
 
   If[divergentSectors =!= {},
     Message[TropicalEval::nodivergent];
@@ -1630,6 +1680,10 @@ Module[
   maxDim   = OptionValue["MaxDim"];
   seedBase = OptionValue["SeedBase"];
   nSamples = OptionValue["NSamples"];
+
+  imagExpsOpt  = OptionValue["ImagExponents"];
+  hasImagPhase = imagExpsOpt =!= None &&
+    AnyTrue[imagExpsOpt, (Abs[N[#]] > 1*^-15 &)];
 
   (* Build parameter map: kinematic symbol -> params[i] *)
   paramMap = Association @@ Table[
@@ -1708,6 +1762,53 @@ Module[
           mmaToCInternal[polyExps[[j]], paramMap] <>
           " * std::log(P" <> ToString[j - 1] <> "));\n";,
         {j, Length[polyExps]}
+      ];
+
+      (* Oscillatory phase from complex polynomial exponents (SplitRealImag mode):
+         exp(i * sum_k imB[k] * log|P_k|).  Only emitted when any imB is non-zero.
+         log|P_k| is NOT just log|Q_k| (the cleared-polynomial value evaluated
+         above): the tropical factoring removed a monomial factor y^{d_k} from
+         P_k, and for a lifted sector the pivot substitution added another.  That
+         factor's log is the per-sector "MonoFactorLog" linear form (Const_k +
+         sum_i Coeffs_{k,i} log_y[i]); omitting it (the pre-fix behavior) gives a
+         wrong oscillatory phase whenever any d_k != 0. *)
+      If[hasImagPhase,
+        Module[{imBStr, mfl, phaseTerms, phaseSum},
+          imBStr = StringRiffle[
+            ToString[CForm[N[#]]] & /@ imagExpsOpt,
+            ", "
+          ];
+          funcCode = funcCode <>
+            "    const double imB[] = {" <> imBStr <> "};\n";
+          mfl = Lookup[sd, "MonoFactorLog", None];
+          phaseTerms = Table[
+            Module[{constK, coeffsK, monoTerms, logQ},
+              logQ = "std::log(std::abs(P" <> ToString[j - 1] <> "))";
+              If[mfl === None,
+                (* fallback: cleared-polynomial value only (legacy behavior) *)
+                "imB[" <> ToString[j - 1] <> "] * (" <> logQ <> ")",
+                constK  = N[mfl[[j]]["Const"]];
+                coeffsK = N[mfl[[j]]["Coeffs"]];
+                monoTerms = Table[
+                  If[TrueQ[coeffsK[[i]] == 0.], Nothing,
+                    "(" <> ToString[CForm[coeffsK[[i]]]] <> ") * log_y[" <>
+                    ToString[i - 1] <> "]"],
+                  {i, Length[coeffsK]}];
+                "imB[" <> ToString[j - 1] <> "] * (" <>
+                  StringRiffle[
+                    Join[
+                      If[TrueQ[constK == 0.], {},
+                        {"(" <> ToString[CForm[constK]] <> ")"}],
+                      monoTerms, {logQ}],
+                    " + "] <> ")"
+              ]
+            ],
+            {j, Length[imagExpsOpt]}
+          ];
+          phaseSum = StringRiffle[phaseTerms, " + "];
+          funcCode = funcCode <>
+            "    result *= std::exp(cx(0.0, " <> phaseSum <> "));\n"
+        ]
       ];
 
       funcCode = funcCode <> "    return result;\n}\n";
@@ -2038,6 +2139,31 @@ findCubaPrefix[] := SelectFirst[
   $Failed];
 
 (* --------------------------------------------------------------------------
+   computeFanScaled: robust normal-fan computation.
+
+   The normal fan of the Newton polytope is SCALE-INVARIANT, but the packaged
+   fan code needs an integer interior lattice point; thin lattice simplices like
+   conv{0, e_i} lack one for ambient dimension >= 4, so a direct
+   ComputeDecomposition there leaks $Failed into the Polymake input and fails.
+   Computing the fan from a scaled copy K*verts (which gains the interior point
+   (1,...,1) once K > dim) yields the identical fan.  We try the cheap unscaled
+   call first, then escalate K.  Returns {dualVertices, simplexList} or $Failed.
+   (Mirrors TEST/gen_sectors.wl`computeFanRobust, which validated this against
+   direct NIntegrate.)
+   -------------------------------------------------------------------------- *)
+computeFanScaled[verts_List] := Module[{nn, fd},
+  nn = Length[First[verts]];
+  Do[
+    fd = Quiet[ComputeDecomposition[K*verts, "ShowProgress" -> False],
+               TropicalFan::polymake];
+    If[ListQ[fd] && Length[fd] == 2 && FreeQ[fd, $Failed] &&
+       Length[fd[[1]]] > 0 && Length[fd[[2]]] > 0,
+      Return[fd, Module]],
+    {K, {1, nn + 2, 2 nn + 4, 6 nn + 6}}];
+  $Failed
+];
+
+(* --------------------------------------------------------------------------
    CompileCpp: Compile generated C++ code
 
    The optional 4th positional argument cubaPrefix links the CUBA library:
@@ -2118,11 +2244,41 @@ Options[EvaluateTropicalMC] = {
   (* VEGAS tuning -- forwarded to GenerateCppMonteCarlo when VEGAS *)
   "VegasEpsRel"    -> Automatic,    (* Automatic => 10^-PrecisionGoal, clamped *)
   "VegasSeed"      -> 0,
-  "VegasNStart"    -> 1000,
-  "VegasNIncrease" -> 500,
-  "VegasNBatch"    -> 1000,
+  (* Automatic => dimension-aware sizing (see resolveVegasSizing).  The fixed
+     low-dim defaults 1000/500/1000 are FAR too small in high dimension: VEGAS
+     then converges to a CONFIDENTLY WRONG value with a deceptively tight error
+     bar (e.g. ~45% off at n=8).  Automatic scales the per-iteration grid
+     resolution up with the sector dimension; n<=4 is left exactly at the old
+     defaults.  Explicit integer values are always respected. *)
+  "VegasNStart"    -> Automatic,
+  "VegasNIncrease" -> Automatic,
+  "VegasNBatch"    -> Automatic,
   "VegasMinEval"   -> 0
 };
+
+(* --------------------------------------------------------------------------
+   resolveVegasSizing: dimension-aware VEGAS grid sizing.
+
+   The CUBA-Vegas per-iteration sample budget (NStart, growing by NIncrease)
+   must populate an adaptive grid in `dim` dimensions.  The shipped low-dim
+   defaults (1000/500/1000) leave the grid catastrophically under-resolved for
+   dim >= ~6: VEGAS locks onto a wrong stratification and returns a wrong value
+   with a tiny (lying) error bar.  This resolves an Automatic sizing option to
+   a value that scales with the maximum sector dimension, while reproducing the
+   historical defaults exactly for dim <= 4 (so low-dim results are unchanged).
+   -------------------------------------------------------------------------- *)
+resolveVegasSizing[optVal_, maxDim_Integer, base_Integer, kind_String] :=
+  If[optVal =!= Automatic,
+    Round[optVal],
+    (* dim<=4: historical default; dim>=5: grow ~3x per extra dimension *)
+    Module[{scale = If[maxDim <= 4, 1, 3^(maxDim - 4)], v},
+      v = Round[base * scale];
+      Switch[kind,
+        "NBatch", Min[v, 50000],   (* keep the per-call batch buffer modest *)
+        _,        v
+      ]
+    ]
+  ];
 
 EvaluateTropicalMC[integrandSpec_Association, fanData_List,
                    kinematicPoints_List, OptionsPattern[]] :=
@@ -2331,6 +2487,31 @@ Module[
     Return[$Failed]
   ];
 
+  (* --- Step 5b: resolve dimension-aware VEGAS sizing (Automatic) --- *)
+  If[isVegas,
+    Module[{maxSecDim},
+      maxSecDim = If[Length[convergentSectors] > 0,
+        Max[#["Dimension"] & /@ convergentSectors], 1];
+      vegasNStart    = resolveVegasSizing[vegasNStart,    maxSecDim, 1000, "NStart"];
+      vegasNIncrease = resolveVegasSizing[vegasNIncrease, maxSecDim,  500, "NIncrease"];
+      vegasNBatch    = resolveVegasSizing[vegasNBatch,    maxSecDim, 1000, "NBatch"];
+      vegasMinEval   = Round[vegasMinEval];
+      If[verbose && maxSecDim >= 5,
+        Print["  VEGAS sizing (max sector dim ", maxSecDim, "): NStart=", vegasNStart,
+              ", NIncrease=", vegasNIncrease, ", NBatch=", vegasNBatch]];
+      (* The maxeval budget (n_samples) must allow several refinement iterations
+         on top of the (now larger) per-iteration grid, or VEGAS stops before it
+         has adapted.  Warn -- do NOT silently override the user's budget. *)
+      If[maxSecDim >= 5 && nSamples < 20 vegasNStart,
+        Message[TropicalEval::vegasbudget, maxSecDim, nSamples, vegasNStart,
+                20 vegasNStart]]
+    ],
+    vegasNStart    = If[vegasNStart    === Automatic, 1000, Round[vegasNStart]];
+    vegasNIncrease = If[vegasNIncrease === Automatic,  500, Round[vegasNIncrease]];
+    vegasNBatch    = If[vegasNBatch    === Automatic, 1000, Round[vegasNBatch]];
+    vegasMinEval   = Round[vegasMinEval]
+  ];
+
   (* --- Step 6: Generate C++ code --- *)
   cppFile    = FileNameJoin[{workDir, "tropical_mc_generated.cpp"}];
   cppBinary  = FileNameJoin[{workDir, "tropical_mc"}];
@@ -2349,7 +2530,8 @@ Module[
     "VegasNStart" -> vegasNStart,
     "VegasNIncrease" -> vegasNIncrease,
     "VegasNBatch" -> vegasNBatch,
-    "VegasMinEval" -> vegasMinEval
+    "VegasMinEval" -> vegasMinEval,
+    "ImagExponents" -> If[isLifted, Lookup[liftData, "ImagExponents", None], None]
   ];
 
   If[!AssociationQ[cppResult],
@@ -2565,11 +2747,17 @@ Module[
    ============================================================================ *)
 
 Options[EvaluateTropicalMCLifted] = Join[
-  {"LiftRules"     -> Automatic,
-   "Threshold"     -> 1000,
-   "AnchorRule"    -> "kStar",
-   "BandEdgeGuard" -> False,
-   "FanData"       -> Automatic},
+  {"LiftRules"            -> Automatic,
+   "Threshold"            -> 1000,
+   "AnchorRule"           -> "kStar",
+   "BandEdgeGuard"        -> False,
+   "FanData"              -> Automatic,
+   (* "Reject": fire liftcomplexexponents and return $Failed when any B_k is complex.
+      "SplitRealImag": decompose P^B = P^{Re(B)} * exp(i*Im(B)*log|P|); the real
+      exponent drives lifting/sectors while the imaginary part contributes an
+      oscillatory phase per MC sample.  Variance is not reduced by this splitting
+      when Im(B) is large (rapid oscillation of the phase). *)
+   "ComplexExponentMode"  -> "Reject"},
   Options[EvaluateTropicalMC]
 ];
 
@@ -2577,6 +2765,7 @@ EvaluateTropicalMCLifted[integrandSpec_Association, kinematicPoints_List,
                          opts: OptionsPattern[]] :=
 Module[
   {liftRulesOpt, threshold, anchorRule, bandEdgeGuard, fanDataOpt,
+   complexExpMode, hasComplexExps, imagExps, realSpec,
    rules, liftResult, liftedSpec, liftData,
    verts, fan, n,
    (* passthrough EvaluateTropicalMC opts *)
@@ -2629,11 +2818,39 @@ the original spec."];
     rules = liftRulesOpt
   ];
 
+  (* --- Detect and handle complex polynomial exponents (Fix 2/3) --- *)
+  complexExpMode = OptionValue["ComplexExponentMode"];
+  hasComplexExps = AnyTrue[N[integrandSpec["PolynomialExponents"]],
+    (NumericQ[#] && Abs[Im[#]] >= 1*^-12) &];
+  If[hasComplexExps && complexExpMode === "Reject",
+    Message[TropicalEval::liftcomplexexponents,
+            Count[N[integrandSpec["PolynomialExponents"]],
+                  _?(Abs[Im[N[#]]] >= 1*^-12 &)],
+            Length[integrandSpec["PolynomialExponents"]]];
+    Return[$Failed]
+  ];
+  If[hasComplexExps && complexExpMode === "SplitRealImag",
+    (* Split: real part drives lifting/sectors; imaginary part → phase per sample.
+       Store imagExps in realSpec so LiftCoefficients forwards it to liftData. *)
+    imagExps = Im[N[#]] & /@ integrandSpec["PolynomialExponents"];
+    realSpec = Association[integrandSpec,
+      "PolynomialExponents" -> (Re[N[#]] & /@ integrandSpec["PolynomialExponents"]),
+      "ImagExponents"       -> imagExps]
+    ,
+    imagExps = ConstantArray[0., Length[integrandSpec["PolynomialExponents"]]];
+    realSpec = integrandSpec
+  ];
+
   (* --- Lift the integrand --- *)
-  liftResult = LiftCoefficients[integrandSpec, rules];
+  liftResult = LiftCoefficients[realSpec, rules];
   If[!AssociationQ[liftResult], Return[$Failed]];
   liftedSpec = liftResult["LiftedSpec"];
-  liftData   = liftResult["LiftData"];
+  (* Restore original spec (with complex exponents) in liftData so that
+     ValidateLiftedDecomposition uses the correct reference integrand. *)
+  liftData   = Association[liftResult["LiftData"],
+    "OriginalSpec"  -> integrandSpec,
+    "ImagExponents" -> imagExps
+  ];
   n          = Length[integrandSpec["Variables"]];
 
   (* --- Build or use the (n+1)-dimensional fan --- *)
@@ -2652,13 +2869,12 @@ the original spec."];
         ],
         TropicalFan::polymake
       ];
-      liftedFan = If[ListQ[verts],
-        Quiet[
-          ComputeDecomposition[verts, "ShowProgress" -> False],
-          TropicalFan::polymake
-        ],
-        $Failed
-      ];
+      (* Use the scale-robust fan computation: a direct ComputeDecomposition
+         leaks $Failed for n+1 >= 4 (thin lattice simplices lack an interior
+         lattice point), which previously made the automatic path fail with a
+         misleading liftdegenerate even for genuinely full-dimensional lifted
+         polytopes.  computeFanScaled retries on a scaled copy (same fan). *)
+      liftedFan = If[ListQ[verts], computeFanScaled[verts], $Failed];
 
       (* Degeneracy guard: check that fan was computed and simplices have
          the right length (n+2 rays for n+1 variables) *)

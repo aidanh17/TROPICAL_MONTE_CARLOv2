@@ -313,10 +313,204 @@ RunTestCxD[] := Module[
 
 
 (* ============================================================================
+   Test 24E: Fix 1 validation — real floating-point extreme coefficient.
+
+   P = 3.7 + 2.3e-6 x[1]^2 + x[1] + x[2]^2,  A = {0,0},  B = {-2}.
+   The constant term 3.7 and the tiny coefficient 2.3e-6 (a machine float)
+   make z0 = sqrt(2.3e-6) a machine float.  Before Fix 1, Simplify cannot
+   reduce the floating-point roundtrip error to 0 and the liftidentity message
+   fires as a false positive.  (The linear x[1] term gives the lifted Newton
+   polytope its full dimension -- x[1] then appears in two monomials, x[1] and
+   x[1]^2 -- so ValidateLiftedDecomposition's automatic fan is non-degenerate;
+   without it the 3-monomial polytope would be lower-dimensional.)
+
+   PASS gates:
+     (1) DetectExtremeCoefficients finds exactly 1 extreme entry (x[1]^2),
+         SuggestedK == 2.
+     (2) liftidentity does NOT fire.
+     (3) ValidateLiftedDecomposition relErr < 1e-2.
+   ============================================================================ *)
+
+RunTestCxE[] := Module[
+  {poly, vars, spec, lr, det, lc, ls, ld, lv, lf, vl, relErr,
+   firedLiftidentity, allPass},
+
+  Print["--- Test 24E: Fix 1 — real float extreme coeff (liftidentity false-positive) ---"];
+  allPass = True;
+
+  vars = {x[1], x[2]};
+  poly = 3.7 + 2.3*^-6 * x[1]^2 + x[1] + x[2]^2;
+  spec = <|"Polynomials"->{poly}, "MonomialExponents"->{0,0},
+           "PolynomialExponents"->{-2}, "Variables"->vars,
+           "KinematicSymbols"->{}, "RegulatorSymbol"->None|>;
+
+  (* (1) Detection: exactly one extreme monomial (the 2.3e-6 x[1]^2); the
+     constant 3.7 and the unit coefficients of x[1], x[2]^2 are non-extreme *)
+  det = DetectExtremeCoefficients[spec, 1000];
+  If[Length[det] == 1 &&
+     AllTrue[det, (#["ExponentVector"] == {2,0} && #["SuggestedK"] == 2) &],
+    Print["  (1) detect: PASS (1 extreme, x[1]^2, k=2)"],
+    Print["  (1) detect: FAIL -> ", det]; allPass = False
+  ];
+
+  lr = {<|"PolyIndex"->1, "ExponentVector"->{2,0}, "k"->2|>};
+
+  (* (2) LiftCoefficients must NOT fire liftidentity *)
+  firedLiftidentity = False;
+  Check[
+    lc = LiftCoefficients[spec, lr],
+    firedLiftidentity = True,
+    TropicalEval::liftidentity
+  ];
+  If[!firedLiftidentity && AssociationQ[lc],
+    Print["  (2) liftidentity not fired: PASS"],
+    Print["  (2) liftidentity fired (false positive): FAIL"]; allPass = False
+  ];
+  If[!AssociationQ[lc], Print["  LiftCoefficients FAILED"]; Return[False]];
+
+  ls = lc["LiftedSpec"]; ld = lc["LiftData"];
+  Print["  z0 = ", N[ld["z0"]], "  residual = ", N[ld["Residuals"][[1]]]];
+
+  (* (3) ValidateLiftedDecomposition *)
+  lv = PolytopeVertices[(Times @@ ls["Polynomials"])^(-1), ls["Variables"]];
+  lf = Quiet @ ComputeDecomposition[lv, "ShowProgress"->False];
+  If[ListQ[lf] && AllTrue[lf[[2]], Length[#] == 3 &],
+    vl = Quiet @ ValidateLiftedDecomposition[spec, ls, lf, ld, {}, 4];
+    relErr = If[AssociationQ[vl], vl["RelativeError"], $Failed];
+    Print["  validate relErr = ", relErr];
+    If[NumericQ[relErr] && relErr < 1*^-2,
+      Print["  (3) exactness: PASS (relErr < 1e-2)"],
+      Print["  (3) exactness: FAIL"]; allPass = False
+    ],
+    Print["  lifted polytope degenerate -> FAIL"]; allPass = False
+  ];
+
+  Print[]; Print[If[allPass, "24E PASS", "24E FAIL"]];
+  allPass
+];
+
+
+(* ============================================================================
+   Test 24F: Fix 2 + Fix 3 — complex polynomial exponent with SplitRealImag.
+
+   P = 1 + 1e-6 x[1]^2 + x[2]^2 + x[1] x[2]^2,  A = {0,0},
+   B = -(2+I)  (complex exponent: gamma_re = -2, gamma_im = -1).
+
+   With "ComplexExponentMode" -> "Reject" (default), the pre-flight check fires
+   TropicalEval::liftcomplexexponents and returns $Failed.
+   With "ComplexExponentMode" -> "SplitRealImag", the integrand is split into
+   real-exponent weight P^{-2} and oscillatory phase exp(-I log|P|); lifting
+   proceeds on the real exponent and the phase is multiplied per MC sample.
+
+   PASS gates:
+     (1) With Reject mode, liftcomplexexponents fires and $Failed is returned.
+     (2) With SplitRealImag mode, liftcomplexexponents does NOT fire and the
+         call returns an Association (not $Failed).
+     (3) MC result within 5σ of NIntegrate reference (complex value).
+   ============================================================================ *)
+
+RunTestCxF[] := Module[
+  {poly, vars, spec, lr, ref, res, mcRe, mcIm, mcReErr, mcImErr,
+   firedPreflight, allPass, cubaHere, resV, vRe, vIm, relErrV},
+
+  Print["--- Test 24F: Fix 2+3 — complex exponent, SplitRealImag mode ---"];
+  allPass = True;
+
+  vars = {x[1], x[2]};
+  poly = 1 + 10^-6 * x[1]^2 + x[2]^2 + x[1] * x[2]^2;
+  spec = <|"Polynomials"->{poly}, "MonomialExponents"->{0,0},
+           "PolynomialExponents"->{-(2 + I)}, "Variables"->vars,
+           "KinematicSymbols"->{}, "RegulatorSymbol"->None|>;
+  lr = {<|"PolyIndex"->1, "ExponentVector"->{2,0}, "k"->2|>};
+
+  (* (1) Reject mode (default) should fire liftcomplexexponents and return $Failed *)
+  firedPreflight = False;
+  Quiet[
+    Check[
+      EvaluateTropicalMCLifted[spec, {{}},
+        "LiftRules"->lr, "NSamples"->100,
+        "RunChecks"->False, "Verbose"->False,
+        "WorkingDirectory"->$cxWorkDir],
+      firedPreflight = True,
+      TropicalEval::liftcomplexexponents
+    ],
+    TropicalEval::liftcomplexexponents
+  ];
+  If[firedPreflight,
+    Print["  (1) Reject mode fires liftcomplexexponents: PASS"],
+    Print["  (1) Reject mode does not fire (should have): FAIL"]; allPass = False
+  ];
+
+  (* (2) SplitRealImag mode — pre-flight must NOT fire *)
+  firedPreflight = False;
+  res = Quiet[
+    Check[
+      EvaluateTropicalMCLifted[spec, {{}},
+        "LiftRules"->lr,
+        "ComplexExponentMode"->"SplitRealImag",
+        "NSamples"->10^6, "RunChecks"->False, "Verbose"->False,
+        "WorkingDirectory"->$cxWorkDir],
+      (firedPreflight = True; $Failed),
+      TropicalEval::liftcomplexexponents
+    ],
+    TropicalEval::liftcomplexexponents
+  ];
+  If[!firedPreflight,
+    Print["  (2) SplitRealImag does not fire liftcomplexexponents: PASS"],
+    Print["  (2) SplitRealImag fires liftcomplexexponents: FAIL"]; allPass = False
+  ];
+
+  (* (3) value check: SplitRealImag must reproduce the (complex) reference.
+     The split puts the imaginary exponent into an oscillatory phase
+     exp(i*Im(B)*log|P|); log|P| includes the tropical monomial factor cleared
+     out of P, so the per-sector "MonoFactorLog" term is essential (omitting it
+     -- the pre-fix behavior -- gave a wrong phase, ~50% off).  This lifted +
+     OSCILLATORY integrand is heavy-tailed, so plain-MC error bars are optimistic
+     (Manual sec:vegas); we therefore check the value with VEGAS at a larger
+     budget against a high-precision reference, within the tolerance documented
+     for the lifted+oscillatory regime.  (Needs CUBA; skipped if absent.) *)
+  ref = Quiet @ NIntegrate[
+    (1 + 10^-6 t1^2 + t2^2 + t1 t2^2)^(-(2+I)),
+    {t1, 0, Infinity}, {t2, 0, Infinity},
+    MaxRecursion->40, PrecisionGoal->8, WorkingPrecision->30];
+  cubaHere = AnyTrue[{"/opt/homebrew", "/usr/local", "/usr"},
+    FileExistsQ[FileNameJoin[{#, "include", "cuba.h"}]] &&
+    (FileExistsQ[FileNameJoin[{#, "lib", "libcuba.a"}]] ||
+     FileExistsQ[FileNameJoin[{#, "lib", "libcuba.dylib"}]] ||
+     FileExistsQ[FileNameJoin[{#, "lib", "libcuba.so"}]]) &];
+  If[! (AssociationQ[res] && KeyExistsQ[res, "Results"]),
+    If[!firedPreflight, Print["  (3) EvaluateTropicalMCLifted FAILED: ", res]; allPass = False],
+    (* res ok: now the accurate value check *)
+    If[! cubaHere,
+      Print["  (3) value check SKIPPED (CUBA absent; VEGAS needed for the \
+heavy-tail oscillatory integrand). Phase codegen still loaded."],
+      resV = Quiet @ EvaluateTropicalMCLifted[spec, {{}},
+        "LiftRules"->lr, "ComplexExponentMode"->"SplitRealImag",
+        "Integrator"->"VEGAS", "NSamples"->10^7, "VegasEpsRel"->1.*^-9,
+        "RunChecks"->False, "Verbose"->False, "WorkingDirectory"->$cxWorkDir];
+      If[AssociationQ[resV] && KeyExistsQ[resV, "Results"],
+        vRe = resV["Results"][[1]]["Re"]; vIm = resV["Results"][[1]]["Im"];
+        relErrV = Abs[(vRe + I vIm) - ref]/Abs[ref];
+        Print["  (3) VEGAS = ", vRe, " + ", vIm, " I"];
+        Print["      ref   = ", N[Re[ref]], " + ", N[Im[ref]], " I   relErr = ", N[relErrV]];
+        If[NumericQ[relErrV] && relErrV < 5*^-2,
+          Print["  (3) SplitRealImag value: PASS (relErr < 5e-2 vs reference; \
+phase incl. monomial factor)"],
+          Print["  (3) SplitRealImag value: FAIL (relErr=", N[relErrV], ")"]; allPass = False],
+        Print["  (3) VEGAS run FAILED: ", resV]; allPass = False]
+    ]
+  ];
+
+  Print[]; Print[If[allPass, "24F PASS", "24F FAIL"]];
+  allPass
+];
+
+
+(* ============================================================================
    Umbrella
    ============================================================================ *)
 
-RunTestCx[] := Module[{pa, pb, pc, pd, all},
+RunTestCx[] := Module[{pa, pb, pc, pd, pe, pf, all},
   Print[""];
   Print["================================================================"];
   Print["  Test 24: lifting with COMPLEX small-magnitude coefficients"];
@@ -327,15 +521,19 @@ RunTestCx[] := Module[{pa, pb, pc, pd, all},
   pb = RunTestCxB[]; Print[""];
   pc = RunTestCxC[]; Print[""];
   pd = RunTestCxD[]; Print[""];
+  pe = RunTestCxE[]; Print[""];
+  pf = RunTestCxF[]; Print[""];
 
-  all = pa && pb && pc && pd;
+  all = pa && pb && pc && pd && pe && pf;
 
   Print["================================================================"];
   Print["  Test 24 Summary"];
-  Print["  24A (single complex coeff, full C++):  ", If[pa, "PASS", "FAIL"]];
-  Print["  24B (very small, automatic k*=3):      ", If[pb, "PASS", "FAIL"]];
-  Print["  24C (multi-rule complex residuals):    ", If[pc, "PASS", "FAIL"]];
-  Print["  24D (complex exponent -> liftcomplex): ", If[pd, "PASS", "FAIL"]];
+  Print["  24A (single complex coeff, full C++):      ", If[pa, "PASS", "FAIL"]];
+  Print["  24B (very small, automatic k*=3):          ", If[pb, "PASS", "FAIL"]];
+  Print["  24C (multi-rule complex residuals):        ", If[pc, "PASS", "FAIL"]];
+  Print["  24D (complex exponent -> liftcomplex):     ", If[pd, "PASS", "FAIL"]];
+  Print["  24E (Fix 1: real float, no false positive):", If[pe, "PASS", "FAIL"]];
+  Print["  24F (Fix 2+3: SplitRealImag mode, C++ MC): ", If[pf, "PASS", "FAIL"]];
   Print["  Overall Test 24: ", If[all, "PASS", "FAIL"]];
   Print["================================================================"];
   Print[""];
