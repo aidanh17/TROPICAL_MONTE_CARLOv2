@@ -464,9 +464,11 @@ Module[
     (* Per-polynomial log of the tropical monomial factor y^{d_k} that was
        cleared out of P_k, expressed in the FLATTENED sample coords y'
        (y_j = y'_j^{1/a_eff,j} => log y_j = log_y'[j]/a_eff,j).  Needed by the
-       SplitRealImag oscillatory phase exp(i Im(B_k) log|P_k|), since
-       log|P_k| = Const_k + sum_i Coeffs_{k,i} log_y'[i] + log|Q_k|, and the
-       cleared-polynomial value the integrand evaluates is only |Q_k|. *)
+       SplitRealImag oscillatory phase exp(i Im(B_k) log P_k) (COMPLEX log),
+       since log P_k = Const_k + sum_i Coeffs_{k,i} log_y'[i] + log Q_k.  The
+       monomial factor y^{d_k} is real-positive, so MonoFactorLog is REAL (it is
+       both log|.| and the full log); the complex argument of P_k comes entirely
+       from the cleared-polynomial value Q_k the integrand evaluates. *)
     "MonoFactorLog"        -> Table[
       <|"Const" -> 0,
         "Coeffs" -> Table[minExponents[[k, i]]/effectiveAVals[[i]], {i, n}]|>,
@@ -743,7 +745,17 @@ Module[
   kinSyms  = integrandSpec["KinematicSymbols"];
   n        = Length[vars];
   auxIdx   = n + 1;
-  auxVar   = Head[vars[[1]]][auxIdx];   (* e.g. x[n+1] *)
+  (* Auxiliary lift variable.  For INDEXED base variables (x[1],x[2],...) the
+     head is the indexing symbol x, so x[n+1] is a fresh, distinct variable.
+     For RAW symbols (e.g. ba1, bb1) Head[ba1] is the literal `Symbol`, and
+     Symbol[n+1] is invalid (trips `Symbol::string: String expected ...` and is
+     a latent footgun downstream); mint a guaranteed-fresh inert symbol instead.
+     The aux variable enters the spec positionally, so its name is irrelevant to
+     downstream codegen (variables flatten to sample coords by position). *)
+  auxVar   = If[Head[vars[[1]]] === Symbol,
+    Unique["xAux"],
+    Head[vars[[1]]][auxIdx]
+  ];
 
   (* ---- Find the primary rule (max |Log[|C|]|) ---- *)
   parsedPolys = ParsePolynomial[#, vars] & /@ polys;
@@ -1140,10 +1152,12 @@ Module[
        flattened sample coords, for the SplitRealImag oscillatory phase (see
        ProcessSector).  In the lifted sector the factor comes from BOTH the
        augmented clearing y^{d^aug_k} and the pivot substitution
-       y_p = z0^{1/m_p} prod_{j!=p} y_j^{-m_j/m_p}:
-         log|P_k| = (d^aug_{k,p}/m_p) log z0
+       y_p = z0^{1/m_p} prod_{j!=p} y_j^{-m_j/m_p}.  z0 > 0 and y_j > 0, so this
+       factor is real-positive and its log (below) is REAL; the complex argument
+       of P_k is carried by the cleared value Q_k via the COMPLEX log in codegen:
+         log P_k = (d^aug_{k,p}/m_p) log z0
                   + sum_j [ (d^aug_{k,j} - d^aug_{k,p} m_j/m_p) + rcMin_{k,j} ] / atilde_j * log_y'[j]
-                  + log|Q_k| .                                                    *)
+                  + log Q_k .                                                     *)
     "MonoFactorLog"       -> With[
       {dAug = sdAug["MinExponents"], rIdx = bestPivot["remainIdx"],
        rcM = bestPivot["rcMin"], logZ0v = Log[z0]},
@@ -1765,13 +1779,28 @@ Module[
       ];
 
       (* Oscillatory phase from complex polynomial exponents (SplitRealImag mode):
-         exp(i * sum_k imB[k] * log|P_k|).  Only emitted when any imB is non-zero.
-         log|P_k| is NOT just log|Q_k| (the cleared-polynomial value evaluated
-         above): the tropical factoring removed a monomial factor y^{d_k} from
-         P_k, and for a lifted sector the pivot substitution added another.  That
-         factor's log is the per-sector "MonoFactorLog" linear form (Const_k +
-         sum_i Coeffs_{k,i} log_y[i]); omitting it (the pre-fix behavior) gives a
-         wrong oscillatory phase whenever any d_k != 0. *)
+         the split identity is  prod_k P_k^{B_k} = prod_k P_k^{Re B_k} *
+         exp( i * sum_k Im(B_k) * log P_k ),  where log is the COMPLEX log.  Only
+         emitted when any imB is non-zero.
+
+         Two corrections, both essential for COMPLEX P_k (CALC2 bases u*x+v*y):
+         (1) The cleared-polynomial value evaluated above, P_k, is complex, so we
+             must use the COMPLEX log std::log(P_k) -- NOT std::log|P_k| (the
+             modulus).  log P_k = log|P_k| + i arg P_k, and the i arg P_k piece,
+             after multiplication by i Im(B_k), is the MAGNITUDE factor
+             exp(-Im(B_k) arg P_k).  Using the modulus silently drops it; that
+             factor is 1 only for real-positive P_k (arg P_k = 0), so the bug is
+             invisible on real-positive bases but wrong by many orders of
+             magnitude for complex ones.
+         (2) The tropical factoring removed a (real-positive) monomial factor
+             y^{d_k} from P_k -- and a lifted sector's pivot substitution removed
+             another.  Its log is the per-sector "MonoFactorLog" linear form
+             (Const_k + sum_i Coeffs_{k,i} log_y[i]); that factor is real-positive
+             so it contributes only a phase, but omitting it gives a wrong phase
+             whenever any d_k != 0.
+         So the per-poly exponent is  cx(0, Im(B_k)) * ( MonoFactorLog_k +
+         std::log(P_k) ), and phaseSum is complex -> result *= std::exp(phaseSum).
+         No-op for real-positive P_k (log P_k = log|P_k|). *)
       If[hasImagPhase,
         Module[{imBStr, mfl, phaseTerms, phaseSum},
           imBStr = StringRiffle[
@@ -1782,11 +1811,14 @@ Module[
             "    const double imB[] = {" <> imBStr <> "};\n";
           mfl = Lookup[sd, "MonoFactorLog", None];
           phaseTerms = Table[
-            Module[{constK, coeffsK, monoTerms, logQ},
-              logQ = "std::log(std::abs(P" <> ToString[j - 1] <> "))";
+            Module[{constK, coeffsK, monoTerms, logQ, iImB},
+              (* COMPLEX log of the cleared polynomial value (carries arg P_k);
+                 i Im(B_k) folded in so the whole term is complex. *)
+              logQ = "std::log(P" <> ToString[j - 1] <> ")";
+              iImB = "cx(0.0, imB[" <> ToString[j - 1] <> "])";
               If[mfl === None,
                 (* fallback: cleared-polynomial value only (legacy behavior) *)
-                "imB[" <> ToString[j - 1] <> "] * (" <> logQ <> ")",
+                iImB <> " * (" <> logQ <> ")",
                 constK  = N[mfl[[j]]["Const"]];
                 coeffsK = N[mfl[[j]]["Coeffs"]];
                 monoTerms = Table[
@@ -1794,7 +1826,7 @@ Module[
                     "(" <> ToString[CForm[coeffsK[[i]]]] <> ") * log_y[" <>
                     ToString[i - 1] <> "]"],
                   {i, Length[coeffsK]}];
-                "imB[" <> ToString[j - 1] <> "] * (" <>
+                iImB <> " * (" <>
                   StringRiffle[
                     Join[
                       If[TrueQ[constK == 0.], {},
@@ -1807,7 +1839,7 @@ Module[
           ];
           phaseSum = StringRiffle[phaseTerms, " + "];
           funcCode = funcCode <>
-            "    result *= std::exp(cx(0.0, " <> phaseSum <> "));\n"
+            "    result *= std::exp(" <> phaseSum <> ");\n"
         ]
       ];
 
@@ -2753,10 +2785,12 @@ Options[EvaluateTropicalMCLifted] = Join[
    "BandEdgeGuard"        -> False,
    "FanData"              -> Automatic,
    (* "Reject": fire liftcomplexexponents and return $Failed when any B_k is complex.
-      "SplitRealImag": decompose P^B = P^{Re(B)} * exp(i*Im(B)*log|P|); the real
-      exponent drives lifting/sectors while the imaginary part contributes an
-      oscillatory phase per MC sample.  Variance is not reduced by this splitting
-      when Im(B) is large (rapid oscillation of the phase). *)
+      "SplitRealImag": decompose P^B = P^{Re(B)} * exp(i*Im(B)*log P) (COMPLEX
+      log); the real exponent drives lifting/sectors while the imaginary part
+      contributes an oscillatory phase per MC sample.  For complex P (e.g. bases
+      with complex coefficients) the complex log is essential: its imaginary part
+      arg P carries the magnitude factor exp(-Im(B) arg P).  Variance is not
+      reduced by this splitting when Im(B) is large (rapid oscillation). *)
    "ComplexExponentMode"  -> "Reject"},
   Options[EvaluateTropicalMC]
 ];
